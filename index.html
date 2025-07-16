@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Quiz App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+</head>
+
+<body>
+    <div class="container">
+        <!-- Quiz Selection Screen -->
+        <div id="quiz-selection" class="quiz-selection">
+            <h1> Quiz App</h1>
+            <p>Select a quiz to begin your learning journey</p>
+            
+            <div class="quiz-grid" id="quiz-grid">
+                <!-- Quiz cards will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <!-- Quiz Header -->
+        <div id="quiz-header" class="header hidden">
+            <input type="text" id="student-name" class="student-name" placeholder="Enter your name (optional)">
+            <h2 id="quiz-title" class="quiz-title"></h2>
+            <div id="timer" class="timer">05:00</div>
+        </div>
+        
+        <!-- Question Container -->
+        <div id="question-container" class="question-container hidden">
+            <div id="progress-info"></div>
+            <div class="question-number" id="question-number">1 / 10</div>
+            <div class="question-text" id="question-text"></div>
+            <div class="options" id="options"></div>
+        </div>
+        
+        <!-- Navigation -->
+        <div id="navigation" class="navigation hidden">
+            <button class="btn btn-secondary" id="prev-btn" onclick="previousQuestion()" disabled>Prev</button>
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next</button>
+        </div>
+        
+        <!-- Results Container -->
+        <div id="results-container" class="results-container hidden">
+            <div id="grade-display" class="grade-display"></div>
+            <p id="grade-message"></p>
+            
+            <div class="score-details">
+                <div class="score-item">
+                    <h4>Score</h4>
+                    <div class="value" id="final-score">0/0</div>
+                </div>
+                <div class="score-item">
+                    <h4>Percentage</h4>
+                    <div class="value" id="final-percentage">0%</div>
+                </div>
+                <div class="score-item">
+                    <h4>Time Taken</h4>
+                    <div class="value" id="time-taken">00:00</div>
+                </div>
+                <div class="score-item">
+                    <h4>Correct</h4>
+                    <div class="value" id="correct-count">0</div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="restartQuiz()">Try Again</button>
+                <button class="btn btn-success" onclick="printResults()">Print </button>
+            </div>
+        </div>
+        
+        <!-- Feedback Panel -->
+        <div id="feedback-panel" class="feedback-panel">
+            <div class="feedback-content">
+                <h3>❌ Incorrect Answer</h3>
+                <div class="correct-answer">
+                    <strong>Correct Answer:</strong> <span id="correct-answer-text"></span>
+                </div>
+                <p id="feedback-explanation"></p>
+                <button class="btn" onclick="closeFeedback()">Continue</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Print-only content -->
+    <div class="print-only">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+            <h1>Quiz Results Report</h1>
+            <p>Generated on <span id="print-date"></span></p>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <p><strong>Student:</strong> <span id="print-student-name">Anonymous</span></p>
+            <p><strong>Quiz:</strong> <span id="print-quiz-title"></span></p>
+            <p><strong>Date:</strong> <span id="print-quiz-date"></span></p>
+            <p><strong>Time Taken:</strong> <span id="print-time-taken"></span></p>
+            <p><strong>Score:</strong> <span id="print-score"></span> (<span id="print-percentage"></span>)</p>
+            <p><strong>Grade:</strong> <span id="print-grade"></span></p>
+        </div>
+        
+        <div id="print-questions" style="margin-top: 30px;"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+
+</html>
