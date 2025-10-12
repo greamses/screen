@@ -7,6 +7,9 @@
     <title>Modern Quiz App</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body>
@@ -38,8 +41,8 @@
         
         <!-- Navigation -->
         <div id="navigation" class="navigation hidden">
-            <button class="btn btn-secondary" id="prev-btn" onclick="previousQuestion()" disabled>Prev</button>
-            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next</button>
+            <button class="btn btn-secondary" id="prev-btn">Prev</button>
+            <button class="btn" id="next-btn">Next</button>
         </div>
         
         <!-- Results Container -->
@@ -67,8 +70,8 @@
             </div>
             
             <div class="navigation">
-                <button class="btn btn-secondary" onclick="restartQuiz()">Try Again</button>
-                <button class="btn btn-success" onclick="printResults()">Print </button>
+                <button class="btn btn-secondary" id="try-again-btn">Try Again</button>
+                <button class="btn btn-success" id="print-btn">Print</button>
             </div>
         </div>
         
@@ -80,7 +83,7 @@
                     <strong>Correct Answer:</strong> <span id="correct-answer-text"></span>
                 </div>
                 <p id="feedback-explanation"></p>
-                <button class="btn" onclick="closeFeedback()">Continue</button>
+                <button class="btn" id="continue-btn">Continue</button>
             </div>
         </div>
     </div>
@@ -104,7 +107,7 @@
         <div id="print-questions" style="margin-top: 30px;"></div>
     </div>
     
-    <script src="script.js"></script>
+    <script src="script.js" type="module"></script>
 </body>
 
 </html>
