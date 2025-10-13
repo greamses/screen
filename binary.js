@@ -1,8 +1,31 @@
-export function generateBinaryQuestions(count = 10) {
-  const questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 6));
+export function generateBinaryQuestions(count = 10, questionType = 'all') {
+  let questionTypes;
+  
+  // Filter question types based on the parameter
+  switch (questionType) {
+    case 'conversion':
+      // Only binary to decimal and decimal to binary questions
+      questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 2));
+      break;
+    case 'arithmetic':
+      // Only arithmetic questions (addition, subtraction, multiplication, division)
+      questionTypes = Array.from({length: count}, (_, i) => 2 + Math.floor(Math.random() * 4));
+      break;
+    case 'logic':
+      // Logic questions (placeholder - you can add these later)
+      questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 2));
+      break;
+    case 'systems':
+      // Number systems questions (placeholder - you can add these later)
+      questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 2));
+      break;
+    default:
+      // All question types (0-5)
+      questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 6));
+  }
 
-  const questions = questionTypes.map(questionType => {
-    switch (questionType) {
+  const questions = questionTypes.map(type => {
+    switch (type) {
       case 0: return generateBinaryToDecimalQuestion();
       case 1: return generateDecimalToBinaryQuestion();
       case 2: return generateBinaryAdditionQuestion();
@@ -16,6 +39,7 @@ export function generateBinaryQuestions(count = 10) {
   return questions;
 }
 
+// Rest of your functions remain exactly the same...
 function generateBinaryToDecimalQuestion() {
   const binaryLength = 4 + Math.floor(Math.random() * 3);
   const binaryNum = generateRandomBinary(binaryLength);
@@ -213,6 +237,7 @@ function generateBinaryDivisionQuestion() {
   };
 }
 
+// All the helper functions remain exactly the same...
 function generateDecimalOptionsWithIndex(correctValue) {
   const offsets = [-5, -3, 3, 5];
   const wrongValues = offsets.map(offset => {
