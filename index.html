@@ -16,7 +16,26 @@
     <div class="container">
         <!-- Topic Selection Screen -->
         <div id="topic-selection" class="topic-selection">
-            <p>Select topics and customize your quiz</p>
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="topic-search" placeholder="Search topics...">
+                    <button id="clear-search" class="btn btn-small">Clear</button>
+                </div>
+                <!-- Replace the existing sort dropdown with this -->
+                <div class="sort-options">
+                    <label>Sort by:</label>
+                    <div class="custom-dropdown" id="sort-dropdown">
+                        <div class="dropdown-selected">
+                            <span id="selected-sort">Alphabetical</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-options">
+                            <div class="dropdown-option" data-value="alphabetical">Alphabetical</div>
+                            <div class="dropdown-option" data-value="category">By Category</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="selection-container">
                 <div class="topics-section">
@@ -34,27 +53,25 @@
                             <input type="number" id="question-count" min="5" max="50" value="10">
                         </div>
                         
-                        <div class="setting-item">
-                            <label for="timer-setting">Timer Setting</label>
-                            <select id="timer-setting">
-                                <option value="300">5 Minutes</option>
-                                <option value="600">10 Minutes</option>
-                                <option value="1200" selected>20 Minutes</option>
-                                <option value="1800">30 Minutes</option>
-                                <option value="3600">1 hour</option>
-                                <option value="7200">2 hours</option>
-                            </select>
-                        </div>
-                        
-                        <div class="setting-item">
-                            <label for="difficulty">Difficulty</label>
-                            <select id="difficulty">
-                                <option value="easy">Easy</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="hard">Hard</option>
-                                <option value="mixed">Mixed</option>
-                            </select>
-                        </div>
+<!-- Timer Setting Dropdown -->
+<div class="setting-item">
+    <label for="timer-setting">Timer Setting</label>
+    <div class="custom-dropdown timer-dropdown" id="timer-dropdown">
+        <div class="dropdown-selected">
+            <span id="selected-timer">20 Minutes</span>
+            <span class="dropdown-arrow">▼</span>
+        </div>
+        <div class="dropdown-options">
+            <div class="dropdown-option" data-value="0">No Timer</div>
+            <div class="dropdown-option" data-value="300">5 Minutes</div>
+            <div class="dropdown-option" data-value="600">10 Minutes</div>
+            <div class="dropdown-option" data-value="1200" data-selected="true">20 Minutes</div>
+            <div class="dropdown-option" data-value="1800">30 Minutes</div>
+            <div class="dropdown-option" data-value="3600">1 Hour</div>
+            <div class="dropdown-option" data-value="7200">2 Hours</div>
+        </div>
+    </div>
+</div>
                         
                         <div class="setting-item checkbox-setting">
                             <input type="checkbox" id="generate-print" checked>
@@ -92,7 +109,7 @@
             </div>
         </div>
         
-
+        
         <div id="navigation" class="navigation hidden">
             <button class="btn btn-secondary" id="prev-btn">Prev</button>
             <button class="btn" id="next-btn">Next</button>

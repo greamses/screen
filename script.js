@@ -1,4 +1,25 @@
-import { quizTopics } from './quizData.js'
+import {
+  quizTopics,
+  quizCategories,
+  getAllQuizTopics,
+  getTopicsByCategory,
+  getCategoryForTopic,
+  getTopicInfo,
+  getAllCategories,
+  getCategoryInfo
+} from './quizData.js';
+
+const timerDropdown = document.getElementById('timer-dropdown');
+const selectedTimerOption = timerDropdown.querySelector('.dropdown-option.selected');
+const timerSetting = selectedTimerOption ? parseInt(selectedTimerOption.getAttribute('data-value')) : 1200;
+
+const questionCountInput = document.getElementById('question-count');
+const difficultyInput = document.getElementById('difficulty');
+const generatePrintInput = document.getElementById('generate-print');
+
+const questionCount = questionCountInput ? parseInt(questionCountInput.value) || 10 : 10;
+const difficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
+const generatePrint = generatePrintInput ? generatePrintInput.checked : true;
 
 let currentQuiz = null;
 let currentQuestionIndex = 0;
@@ -10,24 +31,176 @@ let isMarkingPhase = false;
 let markingIndex = 0;
 let selectedTopics = new Set();
 
+let searchTerm = '';
+let sortBy = 'alphabetical';
+
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
-  topicsGrid.innerHTML = '';
   
-  for (const [topicId, topic] of Object.entries(quizTopics)) {
-    const topicItem = document.createElement('div');
-    topicItem.className = 'topic-item';
-    topicItem.onclick = () => toggleTopic(topicId, topicItem);
+  topicsGrid.innerHTML = '<div class="loading">Loading topics...</div>';
+
+  setTimeout(() => {
+    const filteredTopics = getFilteredAndSortedTopics();
     
-    topicItem.innerHTML = `
-      <div class="topic-checkbox"></div>
-      <span class="topic-label">${topic.title}</span>
-    `;
+    if (filteredTopics.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'no-results';
+      noResults.innerHTML = `
+                <p>No topics found matching "${searchTerm}"</p>
+                <p>Try a different search term or clear your search</p>
+            `;
+      topicsGrid.innerHTML = '';
+      topicsGrid.appendChild(noResults);
+      return;
+    }
     
-    topicsGrid.appendChild(topicItem);
+    topicsGrid.innerHTML = '';
+    if (sortBy === 'category') {
+      renderTopicsByCategory(filteredTopics, topicsGrid);
+    } else {
+      renderTopicsAlphabetically(filteredTopics, topicsGrid);
+    }
+    
+    updateStartButton();
+    
+    const topicItems = topicsGrid.querySelectorAll('.topic-item');
+    topicItems.forEach((item, index) => {
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        item.style.transition = 'all 0.3s ease';
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0)';
+      }, index * 50);
+    });
+  }, 100);
+}
+
+function getFilteredAndSortedTopics() {
+  const allTopics = getAllQuizTopics();
+  
+  let filteredTopics = allTopics.filter(topicId => {
+    const topic = getTopicInfo(topicId);
+    return topic && (
+      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      topic.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+  
+  if (sortBy === 'alphabetical') {
+    filteredTopics.sort((a, b) => {
+      const topicA = getTopicInfo(a);
+      const topicB = getTopicInfo(b);
+      return topicA.title.localeCompare(topicB.title);
+    });
+  } else if (sortBy === 'category') {
+    const categories = getAllCategories();
+    const categorizedTopics = {};
+    
+    categories.forEach(category => {
+      categorizedTopics[category] = getTopicsByCategory(category)
+        .filter(topicId => filteredTopics.includes(topicId))
+        .sort((a, b) => {
+          const topicA = getTopicInfo(a);
+          const topicB = getTopicInfo(b);
+          return topicA.title.localeCompare(topicB.title);
+        });
+    });
+    
+    filteredTopics = [];
+    categories.forEach(category => {
+      if (categorizedTopics[category].length > 0) {
+        filteredTopics = filteredTopics.concat(categorizedTopics[category]);
+      }
+    });
   }
   
-  updateStartButton();
+  return filteredTopics;
+}
+
+function renderTopicsByCategory(filteredTopics, topicsGrid) {
+  const categories = getAllCategories();
+  
+  let hasAnyTopics = false;
+  
+  categories.forEach(category => {
+    const categoryTopics = getTopicsByCategory(category)
+      .filter(topicId => filteredTopics.includes(topicId));
+    
+    if (categoryTopics.length > 0) {
+      hasAnyTopics = true;
+      const categoryInfo = getCategoryInfo(category);
+      const categoryHeader = document.createElement('div');
+      categoryHeader.className = 'category-header';
+      categoryHeader.textContent = categoryInfo.name;
+      topicsGrid.appendChild(categoryHeader);
+      
+      categoryTopics.forEach(topicId => {
+        const topicElement = createTopicElement(topicId);
+        if (topicElement) {
+          topicsGrid.appendChild(topicElement);
+        }
+      });
+    }
+  });
+  
+  if (!hasAnyTopics) {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.innerHTML = `
+      <p>No topics found matching "${searchTerm}"</p>
+      <p>Try a different search term or clear your search</p>
+    `;
+    topicsGrid.appendChild(noResults);
+  }
+}
+
+function renderTopicsAlphabetically(filteredTopics, topicsGrid) {
+  filteredTopics.forEach(topicId => {
+    const topicElement = createTopicElement(topicId);
+    if (topicElement) {
+      topicsGrid.appendChild(topicElement);
+    }
+  });
+}
+
+function createTopicElement(topicId) {
+  const topic = getTopicInfo(topicId);
+  if (!topic) return null;
+  
+  const category = getCategoryForTopic(topicId);
+  
+  const topicItem = document.createElement('div');
+  topicItem.className = 'topic-item';
+  if (selectedTopics.has(topicId)) {
+    topicItem.classList.add('selected');
+  }
+  topicItem.onclick = () => toggleTopic(topicId, topicItem);
+  
+  const highlightedTitle = highlightText(topic.title, searchTerm);
+  const highlightedDescription = highlightText(topic.description, searchTerm);
+  
+  topicItem.innerHTML = `
+    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
+    <div class="topic-content">
+      <span class="topic-title">${highlightedTitle}</span>
+      <span class="topic-description">${highlightedDescription}</span>
+      <span class="topic-category">${category}</span>
+    </div>
+  `;
+  
+  return topicItem;
+}
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm || !text) return text;
+  
+  try {
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+  } catch (e) {
+    return text; 
+  }
 }
 
 function toggleTopic(topicId, topicElement) {
@@ -48,100 +221,71 @@ function toggleTopic(topicId, topicElement) {
 
 function updateStartButton() {
   const startBtn = document.getElementById('start-quiz-btn');
-  startBtn.disabled = selectedTopics.size === 0;
+  if (startBtn) {
+    startBtn.disabled = selectedTopics.size === 0;
+  }
 }
 
-function startQuiz() {
-  if (selectedTopics.size === 0) {
-    alert('Please select at least one topic');
-    return;
+function setupSearch() {
+  const topicSearch = document.getElementById('topic-search');
+  const clearSearch = document.getElementById('clear-search');
+  
+  initializeAllDropdowns();
+  
+  if (topicSearch) {
+    let searchTimeout;
+    topicSearch.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchTerm = this.value;
+        initializeTopicSelection();
+      }, 300);
+    });
+    
+    topicSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        topicSearch.value = '';
+        searchTerm = '';
+        initializeTopicSelection();
+      }
+    });
   }
   
-  // Get settings
-  const questionCount = parseInt(document.getElementById('question-count').value) || 10;
-  const timerSetting = parseInt(document.getElementById('timer-setting').value) || 600;
-  const difficulty = document.getElementById('difficulty').value || 'medium';
-  const generatePrint = document.getElementById('generate-print').checked;
-  
-  const allQuestions = [];
-  const selectedTopicsArray = Array.from(selectedTopics);
-  
-  // Calculate how many questions to take from each topic
-  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
-  const remainder = questionCount % selectedTopicsArray.length;
-  
-  selectedTopicsArray.forEach((topicId, index) => {
-    const topic = quizTopics[topicId];
-    if (topic && topic.generator) {
-      // Give extra questions to the first few topics if there's a remainder
-      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
-      
-      // Generate exactly the number of questions needed for this topic
-      const questions = topic.generator(questionsNeeded);
-      allQuestions.push(...questions);
-    }
-  });
-  
-  // Shuffle all questions
-  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
-  
-  currentQuiz = {
-    title: `Custom Quiz (${Array.from(selectedTopics).map(id => quizTopics[id].title).join(', ')})`,
-    questions: shuffledQuestions,
-    settings: {
-      questionCount,
-      timerSetting,
-      difficulty,
-      generatePrint
-    }
-  };
-  
-  userAnswers = new Array(currentQuiz.questions.length).fill(null);
-  timeRemaining = timerSetting;
-  startTime = new Date();
-  
-  // Create question navigation
-  createQuestionNavigation();
-  
-  // Hide topic selection, show quiz
-  document.getElementById('topic-selection').classList.add('hidden');
-  document.getElementById('quiz-header').classList.remove('hidden');
-  document.getElementById('question-container').classList.remove('hidden');
-  document.getElementById('navigation').classList.remove('hidden');
-  
-  document.getElementById('quiz-title').textContent = currentQuiz.title;
-  
-  if (timerSetting > 0) {
-    startTimer();
-  } else {
-    document.getElementById('timer').textContent = 'No Timer';
+  if (clearSearch) {
+    clearSearch.addEventListener('click', function() {
+      if (topicSearch) {
+        topicSearch.value = '';
+        searchTerm = '';
+        initializeTopicSelection();
+        topicSearch.focus();
+      }
+    });
   }
-  
-  displayQuestion();
 }
 
 function startTimer() {
   updateTimerDisplay();
+  
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  
   timerInterval = setInterval(() => {
     timeRemaining--;
     updateTimerDisplay();
     
     if (timeRemaining <= 0) {
       clearInterval(timerInterval);
-      alert('Time\'s up! The quiz will now be graded.');
-      startMarking();
+      handleTimeUp();
     }
   }, 1000);
 }
 
-function updateTimerDisplay() {
-  const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-  document.getElementById('timer').textContent =
-    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
 function displayQuestion() {
+  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
+    return;
+  }
+  
   const question = currentQuiz.questions[currentQuestionIndex];
   
   document.getElementById('question-number').textContent =
@@ -177,19 +321,23 @@ function updateNavigation() {
   const nextBtn = document.getElementById('next-btn');
   const progressInfo = document.getElementById('progress-info');
   
-  prevBtn.disabled = currentQuestionIndex === 0;
+  if (prevBtn) prevBtn.disabled = currentQuestionIndex === 0;
   
-  if (currentQuestionIndex === currentQuiz.questions.length - 1) {
-    nextBtn.textContent = 'Submit';
-    nextBtn.className = 'btn btn-success';
-  } else {
-    nextBtn.textContent = 'Next';
-    nextBtn.className = 'btn';
+  if (nextBtn) {
+    if (currentQuestionIndex === currentQuiz.questions.length - 1) {
+      nextBtn.textContent = 'Submit';
+      nextBtn.className = 'btn btn-success';
+    } else {
+      nextBtn.textContent = 'Next';
+      nextBtn.className = 'btn';
+    }
+    nextBtn.disabled = userAnswers[currentQuestionIndex] === null;
   }
   
-  nextBtn.disabled = userAnswers[currentQuestionIndex] === null;
-  const answered = userAnswers.filter(answer => answer !== null).length;
-  progressInfo.textContent = `${answered} of ${currentQuiz.questions.length} answered`;
+  if (progressInfo) {
+    const answered = userAnswers.filter(answer => answer !== null).length;
+    progressInfo.textContent = `${answered} of ${currentQuiz.questions.length} answered`;
+  }
 }
 
 function selectOption(optionIndex) {
@@ -280,10 +428,10 @@ function showFeedback(question) {
   const correctAnswerText = document.getElementById('correct-answer-text');
   const feedbackExplanation = document.getElementById('feedback-explanation');
   
-  correctAnswerText.innerHTML = question.options[question.correct];
-  feedbackExplanation.innerHTML = question.explanation;
+  if (correctAnswerText) correctAnswerText.innerHTML = question.options[question.correct];
+  if (feedbackExplanation) feedbackExplanation.innerHTML = question.explanation;
   
-  feedbackPanel.classList.add('show');
+  if (feedbackPanel) feedbackPanel.classList.add('show');
   
   if (window.MathJax) {
     MathJax.typesetPromise();
@@ -292,7 +440,7 @@ function showFeedback(question) {
 
 function closeFeedback() {
   const feedbackPanel = document.getElementById('feedback-panel');
-  feedbackPanel.classList.remove('show');
+  if (feedbackPanel) feedbackPanel.classList.remove('show');
   
   markingIndex++;
   setTimeout(() => {
@@ -382,25 +530,6 @@ function showConfetti() {
   }, 5000);
 }
 
-function restartQuiz() {
-  currentQuestionIndex = 0;
-  userAnswers = [];
-  isMarkingPhase = false;
-  markingIndex = 0;
-  selectedTopics.clear();
-  
-  if (timerInterval) {
-    clearInterval(timerInterval);
-  }
-  
-  document.getElementById('results-container').classList.add('hidden');
-  document.getElementById('topic-selection').classList.remove('hidden');
-  document.getElementById('navigation').style.display = 'flex';
-  
-  // Reset topic selection UI
-  initializeTopicSelection();
-}
-
 function printResults() {
   if (!currentQuiz.settings.generatePrint) {
     alert('Printable results were disabled for this quiz');
@@ -467,7 +596,6 @@ function printResults() {
   }, 100);
 }
 
-// Question Navigation Functions
 function toggleQuestionNav() {
   const navPanel = document.getElementById('question-nav-panel');
   const overlay = document.querySelector('.overlay') || createOverlay();
@@ -510,15 +638,12 @@ function createQuestionNavigation() {
 }
 
 function updateQuestionButtonState(button, index) {
-  // Remove all state classes
   button.classList.remove('current', 'answered', 'marked');
   
-  // Add current class if this is the current question
   if (index === currentQuestionIndex) {
     button.classList.add('current');
   }
   
-  // Add answered class if user has answered this question
   if (userAnswers[index] !== null) {
     button.classList.add('answered');
   }
@@ -540,12 +665,361 @@ function updateQuestionNavigation() {
   });
 }
 
-// Event Listeners
+
+function initializeCustomDropdown() {
+  const dropdown = document.getElementById('sort-dropdown');
+  const selected = dropdown.querySelector('.dropdown-selected');
+  const options = dropdown.querySelector('.dropdown-options');
+  const selectedText = document.getElementById('selected-sort');
+  const optionElements = dropdown.querySelectorAll('.dropdown-option');
+  
+  
+  selected.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isActive = selected.classList.contains('active');
+    
+    closeAllDropdowns();
+    
+    if (!isActive) {
+      selected.classList.add('active');
+      options.classList.add('show');
+    } else {
+      closeDropdown();
+    }
+  });
+  
+  optionElements.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const value = option.getAttribute('data-value');
+      const text = option.textContent;
+      
+
+      selectedText.textContent = text;
+      sortBy = value;
+    
+      optionElements.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+    
+      closeDropdown();
+      initializeTopicSelection();
+    });
+  });
+  
+  
+  document.addEventListener('click', closeDropdown);
+  
+  function closeDropdown() {
+    selected.classList.remove('active');
+    options.classList.remove('show');
+  }
+  
+  function closeAllDropdowns() {
+    document.querySelectorAll('.custom-dropdown .dropdown-selected').forEach(el => {
+      el.classList.remove('active');
+    });
+    document.querySelectorAll('.custom-dropdown .dropdown-options').forEach(el => {
+      el.classList.remove('show');
+    });
+  }
+  
+  const initialOption = dropdown.querySelector(`[data-value="${sortBy}"]`);
+  if (initialOption) {
+    selectedText.textContent = initialOption.textContent;
+    optionElements.forEach(opt => opt.classList.remove('selected'));
+    initialOption.classList.add('selected');
+  }
+}
+
+const additionalStyles = `
+.loading {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-neutral-500);
+    font-style: italic;
+}
+
+#topic-search {
+    position: relative;
+}
+
+#topic-search:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.topic-item {
+    transition: all 0.2s ease;
+}
+
+.topic-item:hover {
+    transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+    .dropdown-options {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 50vh;
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        transform: translateY(100%);
+    }
+    
+    .dropdown-options.show {
+        transform: translateY(0);
+    }
+    
+    .dropdown-option {
+        padding: 14px var(--spacing-lg);
+        font-size: var(--font-size-base);
+    }
+}
+`;
+
+function formatTimeForDisplay(seconds) {
+  if (seconds === 0) return 'No Timer';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  if (hours > 0) {
+    return `${hours} Hour${hours > 1 ? 's' : ''}`;
+  } else if (minutes > 0) {
+    return `${minutes} Minute${minutes > 1 ? 's' : ''}`;
+  } else {
+    return `${seconds} Second${seconds > 1 ? 's' : ''}`;
+  }
+}
+
+function handleTimeUp() {
+  const timerElement = document.getElementById('timer');
+  if (timerElement) {
+    timerElement.classList.add('time-expired');
+    timerElement.textContent = 'TIME UP!';
+  }
+
+  showTimeUpModal();
+}
+
+function showTimeUpModal() {
+  const modal = document.createElement('div');
+  modal.className = 'time-up-modal';
+  modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-icon">⏰</div>
+                <h3>Time's Up!</h3>
+                <p>The quiz will now be automatically submitted and graded.</p>
+                <button class="btn btn-primary" id="proceed-grading">Proceed to Grading</button>
+            </div>
+        </div>
+    `;
+  
+  document.body.appendChild(modal);
+  
+  const modalStyles = `
+        .time-up-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+        
+        .modal-content {
+            background: var(--bg-primary);
+            padding: var(--spacing-3xl);
+            border-radius: var(--border-radius-2xl);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-lg);
+            animation: bounce 0.5s ease;
+        }
+        
+        .modal-content h3 {
+            color: var(--color-danger);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-size-xl);
+        }
+        
+        .modal-content p {
+            color: var(--color-gray-600);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    `;
+  
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = modalStyles;
+  document.head.appendChild(styleSheet);
+  
+  document.getElementById('proceed-grading').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    document.head.removeChild(styleSheet);
+    startMarking();
+  });
+  
+  setTimeout(() => {
+    if (document.body.contains(modal)) {
+      document.body.removeChild(modal);
+      document.head.removeChild(styleSheet);
+      startMarking();
+    }
+  }, 5000);
+}
+
+const timerStyles = `
+.timer {
+    transition: all 0.3s ease;
+    font-weight: var(--font-weight-semibold);
+}
+
+.timer.time-warning {
+    background: var(--color-warning-light) !important;
+    color: var(--color-warning-dark) !important;
+    border-color: var(--color-warning) !important;
+}
+
+.timer.time-warning.pulse {
+    animation: pulse 1s infinite;
+}
+
+.timer.time-expired {
+    background: var(--color-danger-light) !important;
+    color: var(--color-danger) !important;
+    border-color: var(--color-danger) !important;
+    animation: shake 0.5s ease;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.timer-dropdown .dropdown-option[data-value="0"] {
+    color: var(--color-neutral-500);
+    font-style: italic;
+}
+
+.timer-dropdown .dropdown-option[data-value="0"] .timer-value {
+    display: none;
+}
+
+.timer-quick-select {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.timer-quick-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    color: var(--color-neutral-600);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.timer-quick-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.timer-quick-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+`;
+
+function initializeAllDropdowns() {
+  initializeCustomDropdown(); 
+  initializeTimerDropdown(); 
+}
+
+const timerStyleSheet = document.createElement('style');
+timerStyleSheet.textContent = timerStyles;
+document.head.appendChild(timerStyleSheet);
+
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = additionalStyles;
+document.head.appendChild(styleSheet);
+
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('topic-selection').classList.remove('hidden');
-  initializeTopicSelection();
   
-  // Add event listeners
+  setupSearch();
+  initializeTopicSelection();
+
   document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
   document.getElementById('next-btn').addEventListener('click', nextQuestion);
   document.getElementById('prev-btn').addEventListener('click', previousQuestion);
@@ -553,13 +1027,279 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('try-again-btn').addEventListener('click', restartQuiz);
   document.getElementById('print-btn').addEventListener('click', printResults);
   
-  // New event listeners for question navigation
   document.getElementById('nav-toggle-btn').addEventListener('click', toggleQuestionNav);
   document.getElementById('close-nav-panel').addEventListener('click', closeQuestionNav);
   
-  // Settings validation
   document.getElementById('question-count').addEventListener('change', function() {
     const value = parseInt(this.value);
     if (value < 5) this.value = 5;
   });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAllDropdowns();
+    }
+  });
 });
+
+function closeAllDropdowns() {
+  try {
+    const sortDropdown = document.getElementById('sort-dropdown');
+    if (sortDropdown) {
+      const sortSelected = sortDropdown.querySelector('.dropdown-selected');
+      const sortOptions = sortDropdown.querySelector('.dropdown-options');
+      
+      if (sortSelected && sortSelected.classList.contains('active')) {
+        sortSelected.classList.remove('active');
+      }
+      if (sortOptions && sortOptions.classList.contains('show')) {
+        sortOptions.classList.remove('show');
+      }
+    }
+    
+    const timerDropdown = document.getElementById('timer-dropdown');
+    if (timerDropdown) {
+      const timerSelected = timerDropdown.querySelector('.dropdown-selected');
+      const timerOptions = timerDropdown.querySelector('.dropdown-options');
+      
+      if (timerSelected && timerSelected.classList.contains('active')) {
+        timerSelected.classList.remove('active');
+      }
+      if (timerOptions && timerOptions.classList.contains('show')) {
+        timerOptions.classList.remove('show');
+      }
+    }
+    
+    document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
+      const selected = dropdown.querySelector('.dropdown-selected');
+      const options = dropdown.querySelector('.dropdown-options');
+      
+      if (selected && selected.classList.contains('active')) {
+        selected.classList.remove('active');
+      }
+      if (options && options.classList.contains('show')) {
+        options.classList.remove('show');
+      }
+    });
+    
+  } catch (error) {
+  }
+}
+
+document.addEventListener('click', function(event) {
+  if (!event.target.closest('.custom-dropdown')) {
+    closeAllDropdowns();
+  }
+});
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeAllDropdowns();
+  }
+});
+
+window.addEventListener('blur', function() {
+  closeAllDropdowns();
+});
+
+document.addEventListener('touchstart', function(event) {
+  if (!event.target.closest('.custom-dropdown')) {
+    closeAllDropdowns();
+  }
+});
+
+function initializeTimerDropdown() {
+  const dropdown = document.getElementById('timer-dropdown');
+  const selected = dropdown.querySelector('.dropdown-selected');
+  const options = dropdown.querySelector('.dropdown-options');
+  const selectedText = document.getElementById('selected-timer');
+  const optionElements = dropdown.querySelectorAll('.dropdown-option');
+  
+  selected.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isActive = selected.classList.contains('active');
+    
+    closeAllDropdowns();
+    
+    if (!isActive) {
+      selected.classList.add('active');
+      options.classList.add('show');
+    } else {
+      closeTimerDropdown();
+    }
+  });
+  
+  optionElements.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const value = parseInt(option.getAttribute('data-value'));
+      const text = option.textContent;
+      
+      selectedText.textContent = text;
+    
+      optionElements.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      
+      closeTimerDropdown();
+      
+    });
+  });
+  
+  function closeTimerDropdown() {
+    selected.classList.remove('active');
+    options.classList.remove('show');
+  }
+  
+  const initialOption = dropdown.querySelector('[data-value="1200"]'); 
+  if (initialOption) {
+    selectedText.textContent = initialOption.textContent;
+    optionElements.forEach(opt => opt.classList.remove('selected'));
+    initialOption.classList.add('selected');
+  }
+}
+
+function startQuiz() {
+  if (selectedTopics.size === 0) {
+    alert('Please select at least one topic');
+    return;
+  }
+  
+  const allQuestions = [];
+  const selectedTopicsArray = Array.from(selectedTopics);
+  
+
+  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
+  const remainder = questionCount % selectedTopicsArray.length;
+  
+  selectedTopicsArray.forEach((topicId, index) => {
+    const topic = getTopicInfo(topicId);
+    if (topic && topic.generator) {
+
+      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
+      
+      try {
+  
+        const questions = topic.generator(questionsNeeded);
+        allQuestions.push(...questions);
+      } catch (error) {
+      }
+    }
+  });
+
+  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
+  
+  currentQuiz = {
+    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInfo(id).title).join(', ')})`,
+    questions: shuffledQuestions,
+    settings: {
+      questionCount,
+      timerSetting,
+      difficulty,
+      generatePrint
+    }
+  };
+  
+  userAnswers = new Array(currentQuiz.questions.length).fill(null);
+  timeRemaining = timerSetting; 
+  startTime = new Date();
+  
+  
+  createQuestionNavigation();
+  
+
+  document.getElementById('topic-selection').classList.add('hidden');
+  document.getElementById('quiz-header').classList.remove('hidden');
+  document.getElementById('question-container').classList.remove('hidden');
+  document.getElementById('navigation').classList.remove('hidden');
+  
+  document.getElementById('quiz-title').textContent = currentQuiz.title;
+  
+  if (timerSetting > 0) {
+    startTimer();
+  } else {
+    document.getElementById('timer').textContent = 'No Timer';
+  }
+  
+  displayQuestion();
+}
+
+function getCurrentTimerSetting() {
+  const timerDropdown = document.getElementById('timer-dropdown');
+  if (timerDropdown) {
+    const selectedOption = timerDropdown.querySelector('.dropdown-option.selected');
+    return selectedOption ? parseInt(selectedOption.getAttribute('data-value')) : 1200;
+  }
+  return 1200; 
+}
+
+function restartQuiz() {
+  currentQuestionIndex = 0;
+  userAnswers = [];
+  isMarkingPhase = false;
+  markingIndex = 0;
+  selectedTopics.clear();
+  
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  
+  document.getElementById('results-container').classList.add('hidden');
+  document.getElementById('topic-selection').classList.remove('hidden');
+  document.getElementById('navigation').style.display = 'flex';
+  
+  searchTerm = '';
+  sortBy = 'alphabetical';
+  const topicSearch = document.getElementById('topic-search');
+  if (topicSearch) topicSearch.value = '';
+  
+  resetTimerDropdown();
+  
+  initializeAllDropdowns();
+  
+  initializeTopicSelection();
+}
+
+function resetTimerDropdown() {
+  const timerDropdown = document.getElementById('timer-dropdown');
+  if (timerDropdown) {
+    const selectedText = timerDropdown.querySelector('#selected-timer');
+    const optionElements = timerDropdown.querySelectorAll('.dropdown-option');
+    const defaultOption = timerDropdown.querySelector('[data-value="1200"]');
+    
+    if (selectedText && defaultOption) {
+      selectedText.textContent = defaultOption.textContent;
+      optionElements.forEach(opt => opt.classList.remove('selected'));
+      defaultOption.classList.add('selected');
+    }
+  }
+}
+
+function updateTimerDisplay() {
+  const timerElement = document.getElementById('timer');
+  if (!timerElement) return;
+  
+  if (timeRemaining <= 0) {
+    timerElement.textContent = '00:00';
+    timerElement.classList.add('time-warning', 'time-expired');
+    return;
+  }
+  
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  
+  timerElement.textContent = timeString;
+  
+  if (timeRemaining < 60) {
+    timerElement.classList.add('time-warning', 'pulse');
+  } else if (timeRemaining < 300) { 
+    timerElement.classList.add('time-warning');
+    timerElement.classList.remove('pulse');
+  } else {
+    timerElement.classList.remove('time-warning', 'pulse', 'time-expired');
+  }
+}
+
+function debugTimer() {
+  const timerSetting = getCurrentTimerSetting();
+}
