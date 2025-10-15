@@ -94,37 +94,37 @@ export const quizTopics = {
   },
   'indices-division': {
     title: 'Division Law',
-    description: 'Apply the division law: aᵐ ÷ aⁿ = aᵐ⁻ⁿ',
+    description: 'Apply the division law: \\(a^m \\div a^n = a^{m-n}\\)',
     generator: (count) => generateIndicesQuestions(count, 'division')
   },
   'indices-fractional-power': {
     title: 'Fractional Power Law',
-    description: 'Apply fractional powers: a^(1/n) = √[n](a) and a^(m/n) = (√[n](a))ᵐ',
+    description: 'Apply fractional powers: \\(a^{1/n} = \\sqrt[n]{a}\\) and \\(a^{m/n} = (\\sqrt[n]{a})^m\\)',
     generator: (count) => generateAdvancedIndicesQuestions(count, 'fractional-power')
   },
   'indices-multiplication': {
     title: 'Multiplication Law',
-    description: 'Apply the multiplication law: aᵐ × aⁿ = aᵐ⁺ⁿ',
+    description: 'Apply the multiplication law: \\(a^m \\times a^n = a^{m+n}\\)',
     generator: (count) => generateIndicesQuestions(count, 'multiplication')
   },
   'indices-negative-power': {
     title: 'Negative Power Law',
-    description: 'Apply the negative power law: a⁻ⁿ = 1/aⁿ',
+    description: 'Apply the negative power law: \\(a^{-n} = \\frac{1}{a^n}\\)',
     generator: (count) => generateAdvancedIndicesQuestions(count, 'negative-power')
   },
   'indices-power-of-one': {
     title: 'Power of One',
-    description: 'Understand that any number to the power of 1 equals itself: a¹ = a',
+    description: 'Understand that any number to the power of 1 equals itself: \\(a^1 = a\\)',
     generator: (count) => generateIndicesQuestions(count, 'power-of-one')
   },
   'indices-power-of-power': {
     title: 'Power of a Power',
-    description: 'Apply the power of a power law: (aᵐ)ⁿ = aᵐˣⁿ',
+    description: 'Apply the power of a power law: \\((a^m)^n = a^{m \\times n}\\)',
     generator: (count) => generateIndicesQuestions(count, 'power-of-power')
   },
   'indices-zero-power': {
     title: 'Zero Power Law',
-    description: 'Apply the zero power law: a⁰ = 1 (where a ≠ 0)',
+    description: 'Apply the zero power law: \\(a^0 = 1\\) (where \\(a \\neq 0\\))',
     generator: (count) => generateAdvancedIndicesQuestions(count, 'zero-power')
   },
   

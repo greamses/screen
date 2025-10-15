@@ -34,175 +34,6 @@ let selectedTopics = new Set();
 let searchTerm = '';
 let sortBy = 'alphabetical';
 
-function initializeTopicSelection() {
-  const topicsGrid = document.getElementById('topics-grid');
-  
-  topicsGrid.innerHTML = '<div class="loading">Loading topics...</div>';
-
-  setTimeout(() => {
-    const filteredTopics = getFilteredAndSortedTopics();
-    
-    if (filteredTopics.length === 0) {
-      const noResults = document.createElement('div');
-      noResults.className = 'no-results';
-      noResults.innerHTML = `
-                <p>No topics found matching "${searchTerm}"</p>
-                <p>Try a different search term or clear your search</p>
-            `;
-      topicsGrid.innerHTML = '';
-      topicsGrid.appendChild(noResults);
-      return;
-    }
-    
-    topicsGrid.innerHTML = '';
-    if (sortBy === 'category') {
-      renderTopicsByCategory(filteredTopics, topicsGrid);
-    } else {
-      renderTopicsAlphabetically(filteredTopics, topicsGrid);
-    }
-    
-    updateStartButton();
-    
-    const topicItems = topicsGrid.querySelectorAll('.topic-item');
-    topicItems.forEach((item, index) => {
-      item.style.opacity = '0';
-      item.style.transform = 'translateY(10px)';
-      setTimeout(() => {
-        item.style.transition = 'all 0.3s ease';
-        item.style.opacity = '1';
-        item.style.transform = 'translateY(0)';
-      }, index * 50);
-    });
-  }, 100);
-}
-
-function getFilteredAndSortedTopics() {
-  const allTopics = getAllQuizTopics();
-  
-  let filteredTopics = allTopics.filter(topicId => {
-    const topic = getTopicInfo(topicId);
-    return topic && (
-      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topic.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  
-  if (sortBy === 'alphabetical') {
-    filteredTopics.sort((a, b) => {
-      const topicA = getTopicInfo(a);
-      const topicB = getTopicInfo(b);
-      return topicA.title.localeCompare(topicB.title);
-    });
-  } else if (sortBy === 'category') {
-    const categories = getAllCategories();
-    const categorizedTopics = {};
-    
-    categories.forEach(category => {
-      categorizedTopics[category] = getTopicsByCategory(category)
-        .filter(topicId => filteredTopics.includes(topicId))
-        .sort((a, b) => {
-          const topicA = getTopicInfo(a);
-          const topicB = getTopicInfo(b);
-          return topicA.title.localeCompare(topicB.title);
-        });
-    });
-    
-    filteredTopics = [];
-    categories.forEach(category => {
-      if (categorizedTopics[category].length > 0) {
-        filteredTopics = filteredTopics.concat(categorizedTopics[category]);
-      }
-    });
-  }
-  
-  return filteredTopics;
-}
-
-function renderTopicsByCategory(filteredTopics, topicsGrid) {
-  const categories = getAllCategories();
-  
-  let hasAnyTopics = false;
-  
-  categories.forEach(category => {
-    const categoryTopics = getTopicsByCategory(category)
-      .filter(topicId => filteredTopics.includes(topicId));
-    
-    if (categoryTopics.length > 0) {
-      hasAnyTopics = true;
-      const categoryInfo = getCategoryInfo(category);
-      const categoryHeader = document.createElement('div');
-      categoryHeader.className = 'category-header';
-      categoryHeader.textContent = categoryInfo.name;
-      topicsGrid.appendChild(categoryHeader);
-      
-      categoryTopics.forEach(topicId => {
-        const topicElement = createTopicElement(topicId);
-        if (topicElement) {
-          topicsGrid.appendChild(topicElement);
-        }
-      });
-    }
-  });
-  
-  if (!hasAnyTopics) {
-    const noResults = document.createElement('div');
-    noResults.className = 'no-results';
-    noResults.innerHTML = `
-      <p>No topics found matching "${searchTerm}"</p>
-      <p>Try a different search term or clear your search</p>
-    `;
-    topicsGrid.appendChild(noResults);
-  }
-}
-
-function renderTopicsAlphabetically(filteredTopics, topicsGrid) {
-  filteredTopics.forEach(topicId => {
-    const topicElement = createTopicElement(topicId);
-    if (topicElement) {
-      topicsGrid.appendChild(topicElement);
-    }
-  });
-}
-
-function createTopicElement(topicId) {
-  const topic = getTopicInfo(topicId);
-  if (!topic) return null;
-  
-  const category = getCategoryForTopic(topicId);
-  
-  const topicItem = document.createElement('div');
-  topicItem.className = 'topic-item';
-  if (selectedTopics.has(topicId)) {
-    topicItem.classList.add('selected');
-  }
-  topicItem.onclick = () => toggleTopic(topicId, topicItem);
-  
-  const highlightedTitle = highlightText(topic.title, searchTerm);
-  const highlightedDescription = highlightText(topic.description, searchTerm);
-  
-  topicItem.innerHTML = `
-    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
-    <div class="topic-content">
-      <span class="topic-title">${highlightedTitle}</span>
-      <span class="topic-description">${highlightedDescription}</span>
-      <span class="topic-category">${category}</span>
-    </div>
-  `;
-  
-  return topicItem;
-}
-
-function highlightText(text, searchTerm) {
-  if (!searchTerm || !text) return text;
-  
-  try {
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-  } catch (e) {
-    return text; 
-  }
-}
-
 function toggleTopic(topicId, topicElement) {
   const checkbox = topicElement.querySelector('.topic-checkbox');
   
@@ -217,13 +48,6 @@ function toggleTopic(topicId, topicElement) {
   }
   
   updateStartButton();
-}
-
-function updateStartButton() {
-  const startBtn = document.getElementById('start-quiz-btn');
-  if (startBtn) {
-    startBtn.disabled = selectedTopics.size === 0;
-  }
 }
 
 function setupSearch() {
@@ -281,41 +105,6 @@ function startTimer() {
   }, 1000);
 }
 
-function displayQuestion() {
-  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
-    return;
-  }
-  
-  const question = currentQuiz.questions[currentQuestionIndex];
-  
-  document.getElementById('question-number').textContent =
-    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
-  document.getElementById('question-text').innerHTML = question.question;
-  
-  const optionsContainer = document.getElementById('options');
-  optionsContainer.innerHTML = '';
-  
-  question.options.forEach((option, index) => {
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'option';
-    optionDiv.innerHTML = option;
-    optionDiv.onclick = () => selectOption(index);
-    
-    if (userAnswers[currentQuestionIndex] === index) {
-      optionDiv.classList.add('selected');
-    }
-    
-    optionsContainer.appendChild(optionDiv);
-  });
-  
-  updateNavigation();
-  updateQuestionNavigation();
-  
-  if (window.MathJax) {
-    MathJax.typesetPromise();
-  }
-}
-
 function updateNavigation() {
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -325,11 +114,15 @@ function updateNavigation() {
   
   if (nextBtn) {
     if (currentQuestionIndex === currentQuiz.questions.length - 1) {
-      nextBtn.textContent = 'Submit';
+      // Change to submit icon and styling
+      nextBtn.innerHTML = '<i class="fas fa-check"></i>';
       nextBtn.className = 'btn btn-success';
+      nextBtn.title = 'Submit Quiz';
     } else {
-      nextBtn.textContent = 'Next';
+      // Change to next arrow icon and default styling
+      nextBtn.innerHTML = '<i class="fas fa-arrow-right"></i>';
       nextBtn.className = 'btn';
+      nextBtn.title = 'Next Question';
     }
     nextBtn.disabled = userAnswers[currentQuestionIndex] === null;
   }
@@ -448,66 +241,6 @@ function closeFeedback() {
   }, 500);
 }
 
-function showResults() {
-  document.getElementById('quiz-header').classList.add('hidden');
-  document.getElementById('question-container').classList.add('hidden');
-  document.getElementById('navigation').classList.add('hidden');
-  
-  document.getElementById('results-container').classList.remove('hidden');
-  
-  const correctAnswers = userAnswers.filter((answer, index) =>
-    answer === currentQuiz.questions[index].correct
-  ).length;
-  
-  const totalQuestions = currentQuiz.questions.length;
-  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
-  const endTime = new Date();
-  const timeTaken = Math.floor((endTime - startTime) / 1000);
-  
-  let grade, gradeClass, message;
-  if (percentage >= 90) {
-    grade = 'A';
-    gradeClass = 'grade-A';
-    message = ' Excellent work! You\'ve mastered this topic!';
-  } else if (percentage >= 80) {
-    grade = 'B';
-    gradeClass = 'grade-B';
-    message = ' Great job! You have a solid understanding!';
-  } else if (percentage >= 70) {
-    grade = 'C';
-    gradeClass = 'grade-C';
-    message = ' Good effort! Keep practicing to improve!';
-  } else if (percentage >= 60) {
-    grade = 'D';
-    gradeClass = 'grade-D';
-    message = ' You\'re getting there! Review the material and try again!';
-  } else {
-    grade = 'F';
-    gradeClass = 'grade-F';
-    message = ' Don\'t give up! Study more and you\'ll improve!';
-  }
-  
-  const gradeDisplay = document.getElementById('grade-display');
-  gradeDisplay.textContent = grade;
-  gradeDisplay.className = `grade-display ${gradeClass}`;
-  
-  document.getElementById('grade-message').textContent = message;
-  document.getElementById('final-score').textContent = `${correctAnswers}/${totalQuestions}`;
-  document.getElementById('final-percentage').textContent = `${percentage}%`;
-  document.getElementById('time-taken').textContent = formatTime(timeTaken);
-  document.getElementById('correct-count').textContent = correctAnswers;
-  
-  if (percentage >= 80) {
-    showConfetti();
-  }
-}
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
 function showConfetti() {
   const confettiContainer = document.createElement('div');
   confettiContainer.className = 'confetti';
@@ -622,33 +355,6 @@ function closeQuestionNav() {
   }
 }
 
-function createQuestionNavigation() {
-  const questionGrid = document.getElementById('question-grid');
-  questionGrid.innerHTML = '';
-  
-  currentQuiz.questions.forEach((_, index) => {
-    const questionBtn = document.createElement('button');
-    questionBtn.className = 'question-number-btn';
-    questionBtn.textContent = index + 1;
-    questionBtn.onclick = () => navigateToQuestion(index);
-    
-    updateQuestionButtonState(questionBtn, index);
-    questionGrid.appendChild(questionBtn);
-  });
-}
-
-function updateQuestionButtonState(button, index) {
-  button.classList.remove('current', 'answered', 'marked');
-  
-  if (index === currentQuestionIndex) {
-    button.classList.add('current');
-  }
-  
-  if (userAnswers[index] !== null) {
-    button.classList.add('answered');
-  }
-}
-
 function navigateToQuestion(index) {
   if (isMarkingPhase) return;
   
@@ -694,13 +400,13 @@ function initializeCustomDropdown() {
       const value = option.getAttribute('data-value');
       const text = option.textContent;
       
-
+      
       selectedText.textContent = text;
       sortBy = value;
-    
+      
       optionElements.forEach(opt => opt.classList.remove('selected'));
       option.classList.add('selected');
-    
+      
       closeDropdown();
       initializeTopicSelection();
     });
@@ -800,7 +506,7 @@ function handleTimeUp() {
     timerElement.classList.add('time-expired');
     timerElement.textContent = 'TIME UP!';
   }
-
+  
   showTimeUpModal();
 }
 
@@ -1001,8 +707,8 @@ const timerStyles = `
 `;
 
 function initializeAllDropdowns() {
-  initializeCustomDropdown(); 
-  initializeTimerDropdown(); 
+  initializeCustomDropdown();
+  initializeTimerDropdown();
 }
 
 const timerStyleSheet = document.createElement('style');
@@ -1019,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   setupSearch();
   initializeTopicSelection();
-
+  configureMathJax();
   document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
   document.getElementById('next-btn').addEventListener('click', nextQuestion);
   document.getElementById('prev-btn').addEventListener('click', previousQuestion);
@@ -1082,8 +788,7 @@ function closeAllDropdowns() {
       }
     });
     
-  } catch (error) {
-  }
+  } catch (error) {}
 }
 
 document.addEventListener('click', function(event) {
@@ -1136,7 +841,7 @@ function initializeTimerDropdown() {
       const text = option.textContent;
       
       selectedText.textContent = text;
-    
+      
       optionElements.forEach(opt => opt.classList.remove('selected'));
       option.classList.add('selected');
       
@@ -1150,7 +855,7 @@ function initializeTimerDropdown() {
     options.classList.remove('show');
   }
   
-  const initialOption = dropdown.querySelector('[data-value="1200"]'); 
+  const initialOption = dropdown.querySelector('[data-value="1200"]');
   if (initialOption) {
     selectedText.textContent = initialOption.textContent;
     optionElements.forEach(opt => opt.classList.remove('selected'));
@@ -1167,25 +872,24 @@ function startQuiz() {
   const allQuestions = [];
   const selectedTopicsArray = Array.from(selectedTopics);
   
-
+  
   const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
   const remainder = questionCount % selectedTopicsArray.length;
   
   selectedTopicsArray.forEach((topicId, index) => {
     const topic = getTopicInfo(topicId);
     if (topic && topic.generator) {
-
+      
       const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
       
       try {
-  
+        
         const questions = topic.generator(questionsNeeded);
         allQuestions.push(...questions);
-      } catch (error) {
-      }
+      } catch (error) {}
     }
   });
-
+  
   const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
   
   currentQuiz = {
@@ -1200,13 +904,13 @@ function startQuiz() {
   };
   
   userAnswers = new Array(currentQuiz.questions.length).fill(null);
-  timeRemaining = timerSetting; 
+  timeRemaining = timerSetting;
   startTime = new Date();
   
   
   createQuestionNavigation();
   
-
+  
   document.getElementById('topic-selection').classList.add('hidden');
   document.getElementById('quiz-header').classList.remove('hidden');
   document.getElementById('question-container').classList.remove('hidden');
@@ -1229,7 +933,7 @@ function getCurrentTimerSetting() {
     const selectedOption = timerDropdown.querySelector('.dropdown-option.selected');
     return selectedOption ? parseInt(selectedOption.getAttribute('data-value')) : 1200;
   }
-  return 1200; 
+  return 1200;
 }
 
 function restartQuiz() {
@@ -1292,7 +996,7 @@ function updateTimerDisplay() {
   
   if (timeRemaining < 60) {
     timerElement.classList.add('time-warning', 'pulse');
-  } else if (timeRemaining < 300) { 
+  } else if (timeRemaining < 300) {
     timerElement.classList.add('time-warning');
     timerElement.classList.remove('pulse');
   } else {
@@ -1302,4 +1006,365 @@ function updateTimerDisplay() {
 
 function debugTimer() {
   const timerSetting = getCurrentTimerSetting();
+}
+
+function renderTopicsByCategory(filteredTopics, topicsGrid) {
+  const categories = getAllCategories();
+  
+  let hasAnyTopics = false;
+  
+  categories.forEach(category => {
+    const categoryTopics = getTopicsByCategory(category)
+      .filter(topicId => filteredTopics.includes(topicId));
+    
+    if (categoryTopics.length > 0) {
+      hasAnyTopics = true;
+      const categoryInfo = getCategoryInfo(category);
+      const categoryHeader = document.createElement('div');
+      categoryHeader.className = 'category-header';
+      categoryHeader.textContent = categoryInfo.name;
+      topicsGrid.appendChild(categoryHeader);
+      
+      categoryTopics.forEach(topicId => {
+        const topicElement = createTopicElement(topicId);
+        if (topicElement) {
+          topicsGrid.appendChild(topicElement);
+        }
+      });
+    }
+  });
+  
+  if (!hasAnyTopics) {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.innerHTML = `
+      <p>No topics found matching "${searchTerm}"</p>
+      <p>Try a different search term or clear your search</p>
+    `;
+    topicsGrid.appendChild(noResults);
+  }
+}
+
+function renderTopicsAlphabetically(filteredTopics, topicsGrid) {
+  filteredTopics.forEach(topicId => {
+    const topicElement = createTopicElement(topicId);
+    if (topicElement) {
+      topicsGrid.appendChild(topicElement);
+    }
+  });
+}
+
+function createQuestionNavigation() {
+  const questionGrid = document.getElementById('question-grid');
+  questionGrid.innerHTML = '';
+  
+  currentQuiz.questions.forEach((_, index) => {
+    const questionBtn = document.createElement('button');
+    questionBtn.className = 'question-number-btn';
+    questionBtn.textContent = index + 1;
+    questionBtn.onclick = () => navigateToQuestion(index);
+    
+    updateQuestionButtonState(questionBtn, index);
+    questionGrid.appendChild(questionBtn);
+  });
+}
+
+function updateQuestionButtonState(button, index) {
+  button.classList.remove('current', 'answered', 'marked');
+  
+  if (index === currentQuestionIndex) {
+    button.classList.add('current');
+  }
+  
+  if (userAnswers[index] !== null) {
+    button.classList.add('answered');
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-header').classList.add('hidden');
+  document.getElementById('question-container').classList.add('hidden');
+  document.getElementById('navigation').classList.add('hidden');
+  
+  document.getElementById('results-container').classList.remove('hidden');
+  
+  const correctAnswers = userAnswers.filter((answer, index) =>
+    answer === currentQuiz.questions[index].correct
+  ).length;
+  
+  const totalQuestions = currentQuiz.questions.length;
+  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+  const endTime = new Date();
+  const timeTaken = Math.floor((endTime - startTime) / 1000);
+  
+  let grade, gradeClass, message;
+  if (percentage >= 90) {
+    grade = 'A';
+    gradeClass = 'grade-A';
+    message = ' Excellent work! You\'ve mastered this topic!';
+  } else if (percentage >= 80) {
+    grade = 'B';
+    gradeClass = 'grade-B';
+    message = ' Great job! You have a solid understanding!';
+  } else if (percentage >= 70) {
+    grade = 'C';
+    gradeClass = 'grade-C';
+    message = ' Good effort! Keep practicing to improve!';
+  } else if (percentage >= 60) {
+    grade = 'D';
+    gradeClass = 'grade-D';
+    message = ' You\'re getting there! Review the material and try again!';
+  } else {
+    grade = 'F';
+    gradeClass = 'grade-F';
+    message = ' Don\'t give up! Study more and you\'ll improve!';
+  }
+  
+  const gradeDisplay = document.getElementById('grade-display');
+  gradeDisplay.textContent = grade;
+  gradeDisplay.className = `grade-display ${gradeClass}`;
+  
+  document.getElementById('grade-message').textContent = message;
+  document.getElementById('final-score').textContent = `${correctAnswers}/${totalQuestions}`;
+  document.getElementById('final-percentage').textContent = `${percentage}%`;
+  document.getElementById('time-taken').textContent = formatTime(timeTaken);
+  document.getElementById('correct-count').textContent = correctAnswers;
+  
+  if (percentage >= 80) {
+    showConfetti();
+  }
+}
+
+function updateStartButton() {
+  const startBtn = document.getElementById('start-quiz-btn');
+  if (startBtn) {
+    startBtn.disabled = selectedTopics.size === 0;
+  }
+}
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function getFilteredAndSortedTopics() {
+  const allTopics = getAllQuizTopics();
+  
+  let filteredTopics = allTopics.filter(topicId => {
+    const topic = getTopicInfo(topicId);
+    return topic && (
+      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      topic.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+  
+  if (sortBy === 'alphabetical') {
+    filteredTopics.sort((a, b) => {
+      const topicA = getTopicInfo(a);
+      const topicB = getTopicInfo(b);
+      return topicA.title.localeCompare(topicB.title);
+    });
+  } else if (sortBy === 'category') {
+    const categories = getAllCategories();
+    const categorizedTopics = {};
+    
+    categories.forEach(category => {
+      categorizedTopics[category] = getTopicsByCategory(category)
+        .filter(topicId => filteredTopics.includes(topicId))
+        .sort((a, b) => {
+          const topicA = getTopicInfo(a);
+          const topicB = getTopicInfo(b);
+          return topicA.title.localeCompare(topicB.title);
+        });
+    });
+    
+    filteredTopics = [];
+    categories.forEach(category => {
+      if (categorizedTopics[category].length > 0) {
+        filteredTopics = filteredTopics.concat(categorizedTopics[category]);
+      }
+    });
+  }
+  
+  return filteredTopics;
+}
+
+function initializeTopicSelection() {
+  const topicsGrid = document.getElementById('topics-grid');
+  
+  topicsGrid.innerHTML = '<div class="loading">Loading topics...</div>';
+  
+  setTimeout(() => {
+    const filteredTopics = getFilteredAndSortedTopics();
+    
+    if (filteredTopics.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'no-results';
+      noResults.innerHTML = `
+        <p>No topics found matching "${searchTerm}"</p>
+        <p>Try a different search term or clear your search</p>
+      `;
+      topicsGrid.innerHTML = '';
+      topicsGrid.appendChild(noResults);
+      
+      // Trigger MathJax after rendering
+      if (window.MathJax) {
+        MathJax.typesetPromise();
+      }
+      return;
+    }
+    
+    topicsGrid.innerHTML = '';
+    if (sortBy === 'category') {
+      renderTopicsByCategory(filteredTopics, topicsGrid);
+    } else {
+      renderTopicsAlphabetically(filteredTopics, topicsGrid);
+    }
+    
+    updateStartButton();
+    
+    // Add animation to topic items
+    const topicItems = topicsGrid.querySelectorAll('.topic-item');
+    topicItems.forEach((item, index) => {
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        item.style.transition = 'all 0.3s ease';
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0)';
+      }, index * 50);
+    });
+    
+    // Trigger MathJax after rendering all topics
+    if (window.MathJax) {
+      MathJax.typesetPromise();
+    }
+  }, 100);
+}
+
+function createTopicElement(topicId) {
+  const topic = getTopicInfo(topicId);
+  if (!topic) return null;
+  
+  const category = getCategoryForTopic(topicId);
+  
+  const topicItem = document.createElement('div');
+  topicItem.className = 'topic-item';
+  if (selectedTopics.has(topicId)) {
+    topicItem.classList.add('selected');
+  }
+  topicItem.onclick = () => toggleTopic(topicId, topicItem);
+  
+  // Use innerHTML directly for MathJax expressions
+  const highlightedTitle = highlightText(topic.title, searchTerm);
+  const highlightedDescription = highlightText(topic.description, searchTerm);
+  
+  topicItem.innerHTML = `
+    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
+    <div class="topic-content">
+      <span class="topic-title">${highlightedTitle}</span>
+      <span class="topic-description">${highlightedDescription}</span>
+      <span class="topic-category">${category}</span>
+    </div>
+  `;
+  
+  return topicItem;
+}
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm || !text) return text;
+  
+  try {
+    // Protect MathJax expressions before highlighting
+    const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$/g;
+    const mathParts = [];
+    let mathIndex = 0;
+    
+    // Replace MathJax expressions with placeholders
+    const textWithPlaceholders = text.replace(mathRegex, (match) => {
+      const placeholder = `__MATH_${mathIndex}__`;
+      mathParts.push(match);
+      mathIndex++;
+      return placeholder;
+    });
+    
+    // Apply highlighting to non-math parts
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
+    
+    // Restore MathJax expressions
+    const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
+      return mathParts[parseInt(index)] || match;
+    });
+    
+    return finalText;
+  } catch (e) {
+    return text;
+  }
+}
+
+function displayQuestion() {
+  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
+    return;
+  }
+  
+  const question = currentQuiz.questions[currentQuestionIndex];
+  
+  document.getElementById('question-number').textContent =
+    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+  document.getElementById('question-text').innerHTML = question.question;
+  
+  const optionsContainer = document.getElementById('options');
+  optionsContainer.innerHTML = '';
+  
+  question.options.forEach((option, index) => {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option';
+    optionDiv.innerHTML = option;
+    optionDiv.onclick = () => selectOption(index);
+    
+    if (userAnswers[currentQuestionIndex] === index) {
+      optionDiv.classList.add('selected');
+    }
+    
+    optionsContainer.appendChild(optionDiv);
+  });
+  
+  updateNavigation();
+  updateQuestionNavigation();
+  
+  // Re-render MathJax with proper timing
+  if (window.MathJax) {
+    // Small delay to ensure DOM is fully updated
+    setTimeout(() => {
+      MathJax.typesetPromise().catch(error => {
+        console.error('MathJax typeset error:', error);
+      });
+    }, 50);
+  }
+}
+
+function configureMathJax() {
+  if (window.MathJax) {
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['\\(', '\\)']
+        ],
+        displayMath: [
+          ['\\[', '\\]']
+        ],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        renderActions: {
+          // Add MathJax to the page
+          addMenu: [0, '', '']
+        }
+      }
+    };
+  }
 }

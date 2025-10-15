@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Quiz App</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css" type="text/css" media="all" />
     
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -19,9 +20,11 @@
             <div class="search-section">
                 <div class="search-container">
                     <input type="text" id="topic-search" placeholder="Search topics...">
-                    <button id="clear-search" class="btn btn-small">Clear</button>
+                    <button id="clear-search" >
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <!-- Replace the existing sort dropdown with this -->
+                
                 <div class="sort-options">
                     <label>Sort by:</label>
                     <div class="custom-dropdown" id="sort-dropdown">
@@ -53,25 +56,25 @@
                             <input type="number" id="question-count" min="5" max="50" value="10">
                         </div>
                         
-<!-- Timer Setting Dropdown -->
-<div class="setting-item">
-    <label for="timer-setting">Timer Setting</label>
-    <div class="custom-dropdown timer-dropdown" id="timer-dropdown">
-        <div class="dropdown-selected">
-            <span id="selected-timer">20 Minutes</span>
-            <span class="dropdown-arrow">▼</span>
-        </div>
-        <div class="dropdown-options">
-            <div class="dropdown-option" data-value="0">No Timer</div>
-            <div class="dropdown-option" data-value="300">5 Minutes</div>
-            <div class="dropdown-option" data-value="600">10 Minutes</div>
-            <div class="dropdown-option" data-value="1200" data-selected="true">20 Minutes</div>
-            <div class="dropdown-option" data-value="1800">30 Minutes</div>
-            <div class="dropdown-option" data-value="3600">1 Hour</div>
-            <div class="dropdown-option" data-value="7200">2 Hours</div>
-        </div>
-    </div>
-</div>
+                        <!-- Timer Setting Dropdown -->
+                        <div class="setting-item">
+                            <label for="timer-setting">Timer Setting</label>
+                            <div class="custom-dropdown timer-dropdown" id="timer-dropdown">
+                                <div class="dropdown-selected">
+                                    <span id="selected-timer">20 Minutes</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div class="dropdown-options">
+                                    <div class="dropdown-option" data-value="0">No Timer</div>
+                                    <div class="dropdown-option" data-value="300">5 Minutes</div>
+                                    <div class="dropdown-option" data-value="600">10 Minutes</div>
+                                    <div class="dropdown-option" data-value="1200" data-selected="true">20 Minutes</div>
+                                    <div class="dropdown-option" data-value="1800">30 Minutes</div>
+                                    <div class="dropdown-option" data-value="3600">1 Hour</div>
+                                    <div class="dropdown-option" data-value="7200">2 Hours</div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="setting-item checkbox-setting">
                             <input type="checkbox" id="generate-print" checked>
@@ -79,7 +82,9 @@
                         </div>
                     </div>
                     
-                    <button class="btn btn-primary" id="start-quiz-btn">Start Quiz</button>
+                    <button class="btn btn-primary" id="start-quiz-btn">
+                        Start
+                    </button>
                 </div>
             </div>
         </div>
@@ -88,7 +93,9 @@
         <div id="quiz-header" class="header hidden">
             <input type="text" id="student-name" class="student-name" placeholder="Enter your name (optional)">
             <h2 id="quiz-title" class="quiz-title" style="display: none;"></h2>
-            <div id="timer" class="timer">05:00</div>
+            <div id="timer" class="timer">
+                <i class="fas fa-clock"></i> <span id="timer-text">05:00</span>
+            </div>
         </div>
         
         <!-- Question Container -->
@@ -101,19 +108,27 @@
         
         <div id="question-nav-panel" class="question-nav-panel hidden">
             <div class="nav-panel-header">
-                <h3>Question Navigation</h3>
-                <button class="btn btn-small" id="close-nav-panel">×</button>
+                <h3><i class="fas fa-list"></i> Question Navigation</h3>
+                <button class="btn btn-small" id="close-nav-panel">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="question-grid" id="question-grid">
                 <!-- Question numbers will be dynamically inserted here -->
             </div>
         </div>
         
-        
+        <!-- Navigation with Icons -->
         <div id="navigation" class="navigation hidden">
-            <button class="btn btn-secondary" id="prev-btn">Prev</button>
-            <button class="btn" id="next-btn">Next</button>
-            <button class="btn btn-secondary" id="nav-toggle-btn">Questions</button>
+            <button class="btn btn-secondary" id="prev-btn" title="Previous Question">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <button class="btn" id="next-btn" title="Next Question">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <button class="btn btn-secondary" id="nav-toggle-btn" title="Question Navigation">
+                <i class="fas fa-list"></i>
+            </button>
         </div>
         
         <!-- Results Container -->
@@ -123,38 +138,44 @@
             
             <div class="score-details">
                 <div class="score-item">
-                    <h4>Score</h4>
+                    <h4><i class="fas fa-star"></i> Score</h4>
                     <div class="value" id="final-score">0/0</div>
                 </div>
                 <div class="score-item">
-                    <h4>Percentage</h4>
+                    <h4><i class="fas fa-percentage"></i> Percentage</h4>
                     <div class="value" id="final-percentage">0%</div>
                 </div>
                 <div class="score-item">
-                    <h4>Time Taken</h4>
+                    <h4><i class="fas fa-clock"></i> Time Taken</h4>
                     <div class="value" id="time-taken">00:00</div>
                 </div>
                 <div class="score-item">
-                    <h4>Correct</h4>
+                    <h4><i class="fas fa-check-circle"></i> Correct</h4>
                     <div class="value" id="correct-count">0</div>
                 </div>
             </div>
             
             <div class="navigation">
-                <button class="btn btn-secondary" id="try-again-btn">Try Again</button>
-                <button class="btn btn-success" id="print-btn">Print</button>
+                <button class="btn btn-secondary" id="try-again-btn">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                <button class="btn btn-success" id="print-btn">
+                    <i class="fas fa-print"></i> Print
+                </button>
             </div>
         </div>
         
         <!-- Feedback Panel -->
         <div id="feedback-panel" class="feedback-panel">
             <div class="feedback-content">
-                <h3>❌ Incorrect Answer</h3>
+                <h3><i class="fas fa-times-circle"></i> Incorrect Answer</h3>
                 <div class="correct-answer">
-                    <strong>Correct Answer:</strong> <span id="correct-answer-text"></span>
+                    <strong><i class="fas fa-check-circle"></i> Correct Answer:</strong> <span id="correct-answer-text"></span>
                 </div>
                 <p id="feedback-explanation"></p>
-                <button class="btn" id="continue-btn">Continue</button>
+                <button class="btn" id="continue-btn">
+                    <i class="fas fa-arrow-right"></i> Continue
+                </button>
             </div>
         </div>
     </div>
