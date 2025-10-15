@@ -1,37 +1,50 @@
-:root {
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-light: #eff6ff;
-  --color-success: #059669;
-  --color-success-hover: #047857;
-  --color-success-light: #ecfdf5;
-  --color-success-dark: #065f46;
-  --color-danger: #dc2626;
-  --color-danger-hover: #991b1b;
-  --color-danger-light: #fef2f2;
-  --color-warning: #d97706;
-  --color-warning-light: #fffbeb;
-  --color-warning-dark: #92400e;
+    :root {
+      /* Color Palette */
+      --color-primary: #7c3aed;
+      --color-primary-light: #a78bfa;
+      --color-primary-dark: #5b21b6;
+      --color-secondary: #f1f5f9;
+      --color-accent: #f8fafc;
+      --color-text: #1e293b;
+      --color-text-light: #64748b;
+      --color-text-lighter: #94a3b8;
+      --color-white: #ffffff;
+      --color-border: #e2e8f0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+      --color-info: #3b82f6;
+      
+      /* Typography */
+      --font-family: 'Poppins', sans-serif;
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --font-size-3xl: 1.875rem;
+      
+    --color-algebra: #3b82f6;
+  --color-algebra-light: #dbeafe;
+  --color-algebra-dark: #1d4ed8;
   
-  --color-gray-50: #f8fafc;
-  --color-gray-100: #f1f5f9;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e1;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #64748b;
-  --color-gray-600: #475569;
-  --color-gray-700: #334155;
-  --color-gray-800: #1e293b;
-  --color-gray-900: #0f172a;
+  --color-combinatorics: #8b5cf6;
+  --color-combinatorics-light: #ede9fe;
+  --color-combinatorics-dark: #7c3aed;
   
-  /* Additional neutrals */
-  --color-neutral-100: #f9fafb;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #6b7280;
-  --color-neutral-600: #4b5563;
-  --color-neutral-700: #374151;
+  --color-laws-of-indices: #06b6d4;
+  --color-laws-of-indices-light: #cffafe;
+  --color-laws-of-indices-dark: #0891b2;
+  
+  --color-number-systems: #10b981;
+  --color-number-systems-light: #d1fae5;
+  --color-number-systems-dark: #059669;
+  
+  --color-sequences-series: #f59e0b;
+  --color-sequences-series-light: #fef3c7;
+  --color-sequences-series-dark: #d97706;
+  
   
   --bg-primary: white;
   --bg-secondary: #f8fafc;
@@ -46,46 +59,34 @@
   --border-radius-2xl: 16px;
   --border-radius-full: 30px;
   
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 20px;
-  --spacing-2xl: 24px;
-  --spacing-3xl: 32px;
-  
-  --font-family: 'Poppins', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 2rem;
-  --font-size-3xl: 2.5rem;
-  --font-size-4xl: 3rem;
-  
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-xl: -2px 0 10px rgba(0, 0, 0, 0.1);
-  --shadow-primary: 0 2px 6px rgba(37, 99, 235, 0.3);
-  --shadow-primary-lg: 0 2px 8px rgba(37, 99, 235, 0.3);
-  
-  --transition-fast: 0.15s ease;
-  --transition-base: 0.2s ease;
-  --transition-slow: 0.3s ease;
-  
-  --z-overlay: 999;
-  --z-modal: 1000;
-  --z-confetti: 9999;
-  
-  --button-height: 44px;
-  --button-min-width: 100px;
-  --button-padding: 0 var(--spacing-xl);
-}
+
+      
+      /* Spacing */
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+      --spacing-3xl: 4rem;
+      
+      /* Border Radius */
+      --border-radius-sm: 0.375rem;
+      --border-radius: 0.5rem;
+      --border-radius-lg: 0.75rem;
+      --border-radius-xl: 1rem;
+      --border-radius-full: 9999px;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition: 250ms ease;
+      --transition-slow: 350ms ease;
+    }
+    

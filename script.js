@@ -10,16 +10,16 @@ import {
 } from './quizData.js';
 
 const timerDropdown = document.getElementById('timer-dropdown');
-const selectedTimerOption = timerDropdown.querySelector('.dropdown-option.selected');
+const selectedTimerOption = timerDropdown ? timerDropdown.querySelector('.dropdown-option.selected') : null;
 const timerSetting = selectedTimerOption ? parseInt(selectedTimerOption.getAttribute('data-value')) : 1200;
 
 const questionCountInput = document.getElementById('question-count');
 const difficultyInput = document.getElementById('difficulty');
 const generatePrintInput = document.getElementById('generate-print');
 
-const questionCount = questionCountInput ? parseInt(questionCountInput.value) || 10 : 10;
-const difficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
-const generatePrint = generatePrintInput ? generatePrintInput.checked : true;
+let questionCount = questionCountInput ? parseInt(questionCountInput.value) || 10 : 10;
+let difficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
+let generatePrint = generatePrintInput ? generatePrintInput.checked : true;
 
 let currentQuiz = null;
 let currentQuestionIndex = 0;
@@ -47,7 +47,33 @@ function toggleTopic(topicId, topicElement) {
     checkbox.classList.add('checked');
   }
   
+  refreshCategoryProgress();
   updateStartButton();
+}
+
+function refreshCategoryProgress() {
+  const categories = getAllCategories();
+  
+  categories.forEach(category => {
+    const categoryTopics = getTopicsByCategory(category);
+    const selectedInCategory = categoryTopics.filter(topicId =>
+      selectedTopics.has(topicId)
+    ).length;
+    const progressPercent = (selectedInCategory / categoryTopics.length) * 100;
+    
+    const categoryHeader = document.querySelector(`.category-header[data-category="${category}"]`);
+    if (categoryHeader) {
+      const progressFill = categoryHeader.querySelector('.category-progress-fill');
+      const progressText = categoryHeader.querySelector('.category-progress span');
+      
+      if (progressFill) {
+        progressFill.style.width = `${progressPercent}%`;
+      }
+      if (progressText) {
+        progressText.textContent = `${selectedInCategory}/${categoryTopics.length}`;
+      }
+    }
+  });
 }
 
 function setupSearch() {
@@ -90,6 +116,15 @@ function setupSearch() {
 function startTimer() {
   updateTimerDisplay();
   
+  // Fix: Don't start timer if timer setting is 0
+  if (getCurrentTimerSetting() === 0) {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    return;
+  }
+  
   if (timerInterval) {
     clearInterval(timerInterval);
   }
@@ -100,9 +135,43 @@ function startTimer() {
     
     if (timeRemaining <= 0) {
       clearInterval(timerInterval);
+      timerInterval = null;
       handleTimeUp();
     }
   }, 1000);
+}
+
+function updateTimerDisplay() {
+  const timerElement = document.getElementById('timer');
+  if (!timerElement) return;
+  
+  // Fix: Handle timer display when no timer is set
+  if (timeRemaining === 0 && getCurrentTimerSetting() === 0) {
+    timerElement.textContent = 'No Timer';
+    timerElement.classList.remove('time-warning', 'pulse', 'time-expired');
+    return;
+  }
+  
+  if (timeRemaining <= 0) {
+    timerElement.textContent = '00:00';
+    timerElement.classList.add('time-warning', 'time-expired');
+    return;
+  }
+  
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  
+  timerElement.textContent = timeString;
+  
+  if (timeRemaining < 60) {
+    timerElement.classList.add('time-warning', 'pulse');
+  } else if (timeRemaining < 300) {
+    timerElement.classList.add('time-warning');
+    timerElement.classList.remove('pulse');
+  } else {
+    timerElement.classList.remove('time-warning', 'pulse', 'time-expired');
+  }
 }
 
 function updateNavigation() {
@@ -157,6 +226,7 @@ function nextQuestion() {
   } else {
     if (timerInterval) {
       clearInterval(timerInterval);
+      timerInterval = null;
     }
     startMarking();
   }
@@ -196,6 +266,11 @@ function markNextQuestion() {
   const options = document.querySelectorAll('.option');
   options.forEach((option, index) => {
     option.onclick = null;
+    option.classList.remove('correct', 'incorrect');
+    
+    // Fix: Clear previous result icons
+    const existingIcons = option.querySelectorAll('.result-icon');
+    existingIcons.forEach(icon => icon.remove());
     
     if (index === correctAnswer) {
       option.classList.add('correct');
@@ -206,6 +281,7 @@ function markNextQuestion() {
     }
   });
   
+  // Fix: Properly handle the case where user didn't answer
   if (userAnswer !== correctAnswer && userAnswer !== null) {
     showFeedback(question);
   } else {
@@ -371,14 +447,14 @@ function updateQuestionNavigation() {
   });
 }
 
-
 function initializeCustomDropdown() {
   const dropdown = document.getElementById('sort-dropdown');
+  if (!dropdown) return;
+  
   const selected = dropdown.querySelector('.dropdown-selected');
   const options = dropdown.querySelector('.dropdown-options');
   const selectedText = document.getElementById('selected-sort');
   const optionElements = dropdown.querySelectorAll('.dropdown-option');
-  
   
   selected.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -400,7 +476,6 @@ function initializeCustomDropdown() {
       const value = option.getAttribute('data-value');
       const text = option.textContent;
       
-      
       selectedText.textContent = text;
       sortBy = value;
       
@@ -411,7 +486,6 @@ function initializeCustomDropdown() {
       initializeTopicSelection();
     });
   });
-  
   
   document.addEventListener('click', closeDropdown);
   
@@ -454,13 +528,6 @@ const additionalStyles = `
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-.topic-item {
-    transition: all 0.2s ease;
-}
-
-.topic-item:hover {
-    transform: translateX(4px);
-}
 
 @media (max-width: 768px) {
     .dropdown-options {
@@ -715,38 +782,9 @@ const timerStyleSheet = document.createElement('style');
 timerStyleSheet.textContent = timerStyles;
 document.head.appendChild(timerStyleSheet);
 
-
 const styleSheet = document.createElement('style');
 styleSheet.textContent = additionalStyles;
 document.head.appendChild(styleSheet);
-
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('topic-selection').classList.remove('hidden');
-  
-  setupSearch();
-  initializeTopicSelection();
-  configureMathJax();
-  document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
-  document.getElementById('next-btn').addEventListener('click', nextQuestion);
-  document.getElementById('prev-btn').addEventListener('click', previousQuestion);
-  document.getElementById('continue-btn').addEventListener('click', closeFeedback);
-  document.getElementById('try-again-btn').addEventListener('click', restartQuiz);
-  document.getElementById('print-btn').addEventListener('click', printResults);
-  
-  document.getElementById('nav-toggle-btn').addEventListener('click', toggleQuestionNav);
-  document.getElementById('close-nav-panel').addEventListener('click', closeQuestionNav);
-  
-  document.getElementById('question-count').addEventListener('change', function() {
-    const value = parseInt(this.value);
-    if (value < 5) this.value = 5;
-  });
-  
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeAllDropdowns();
-    }
-  });
-});
 
 function closeAllDropdowns() {
   try {
@@ -788,7 +826,9 @@ function closeAllDropdowns() {
       }
     });
     
-  } catch (error) {}
+  } catch (error) {
+    console.warn('Error closing dropdowns:', error);
+  }
 }
 
 document.addEventListener('click', function(event) {
@@ -815,6 +855,8 @@ document.addEventListener('touchstart', function(event) {
 
 function initializeTimerDropdown() {
   const dropdown = document.getElementById('timer-dropdown');
+  if (!dropdown) return;
+  
   const selected = dropdown.querySelector('.dropdown-selected');
   const options = dropdown.querySelector('.dropdown-options');
   const selectedText = document.getElementById('selected-timer');
@@ -846,7 +888,6 @@ function initializeTimerDropdown() {
       option.classList.add('selected');
       
       closeTimerDropdown();
-      
     });
   });
   
@@ -861,70 +902,6 @@ function initializeTimerDropdown() {
     optionElements.forEach(opt => opt.classList.remove('selected'));
     initialOption.classList.add('selected');
   }
-}
-
-function startQuiz() {
-  if (selectedTopics.size === 0) {
-    alert('Please select at least one topic');
-    return;
-  }
-  
-  const allQuestions = [];
-  const selectedTopicsArray = Array.from(selectedTopics);
-  
-  
-  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
-  const remainder = questionCount % selectedTopicsArray.length;
-  
-  selectedTopicsArray.forEach((topicId, index) => {
-    const topic = getTopicInfo(topicId);
-    if (topic && topic.generator) {
-      
-      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
-      
-      try {
-        
-        const questions = topic.generator(questionsNeeded);
-        allQuestions.push(...questions);
-      } catch (error) {}
-    }
-  });
-  
-  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
-  
-  currentQuiz = {
-    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInfo(id).title).join(', ')})`,
-    questions: shuffledQuestions,
-    settings: {
-      questionCount,
-      timerSetting,
-      difficulty,
-      generatePrint
-    }
-  };
-  
-  userAnswers = new Array(currentQuiz.questions.length).fill(null);
-  timeRemaining = timerSetting;
-  startTime = new Date();
-  
-  
-  createQuestionNavigation();
-  
-  
-  document.getElementById('topic-selection').classList.add('hidden');
-  document.getElementById('quiz-header').classList.remove('hidden');
-  document.getElementById('question-container').classList.remove('hidden');
-  document.getElementById('navigation').classList.remove('hidden');
-  
-  document.getElementById('quiz-title').textContent = currentQuiz.title;
-  
-  if (timerSetting > 0) {
-    startTimer();
-  } else {
-    document.getElementById('timer').textContent = 'No Timer';
-  }
-  
-  displayQuestion();
 }
 
 function getCurrentTimerSetting() {
@@ -945,6 +922,7 @@ function restartQuiz() {
   
   if (timerInterval) {
     clearInterval(timerInterval);
+    timerInterval = null;
   }
   
   document.getElementById('results-container').classList.add('hidden');
@@ -978,34 +956,9 @@ function resetTimerDropdown() {
   }
 }
 
-function updateTimerDisplay() {
-  const timerElement = document.getElementById('timer');
-  if (!timerElement) return;
-  
-  if (timeRemaining <= 0) {
-    timerElement.textContent = '00:00';
-    timerElement.classList.add('time-warning', 'time-expired');
-    return;
-  }
-  
-  const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-  const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  
-  timerElement.textContent = timeString;
-  
-  if (timeRemaining < 60) {
-    timerElement.classList.add('time-warning', 'pulse');
-  } else if (timeRemaining < 300) {
-    timerElement.classList.add('time-warning');
-    timerElement.classList.remove('pulse');
-  } else {
-    timerElement.classList.remove('time-warning', 'pulse', 'time-expired');
-  }
-}
-
 function debugTimer() {
   const timerSetting = getCurrentTimerSetting();
+  console.log('Current timer setting:', timerSetting);
 }
 
 function renderTopicsByCategory(filteredTopics, topicsGrid) {
@@ -1020,9 +973,27 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
     if (categoryTopics.length > 0) {
       hasAnyTopics = true;
       const categoryInfo = getCategoryInfo(category);
+      
+      // Calculate completion progress for this category
+      const selectedInCategory = categoryTopics.filter(topicId =>
+        selectedTopics.has(topicId)
+      ).length;
+      const progressPercent = (selectedInCategory / categoryTopics.length) * 100;
+      
       const categoryHeader = document.createElement('div');
       categoryHeader.className = 'category-header';
-      categoryHeader.textContent = categoryInfo.name;
+      categoryHeader.setAttribute('data-category', category.toLowerCase().replace(/\s+/g, '-')); // Convert to lowercase with dashes
+      categoryHeader.innerHTML = `
+        <div class="category-title">
+          ${categoryInfo.name}
+        </div>
+        <div class="category-progress">
+          <div class="category-progress-bar">
+            <div class="category-progress-fill" style="width: ${progressPercent}%"></div>
+          </div>
+          <span>${selectedInCategory}/${categoryTopics.length}</span>
+        </div>
+      `;
       topicsGrid.appendChild(categoryHeader);
       
       categoryTopics.forEach(topicId => {
@@ -1038,8 +1009,9 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
     const noResults = document.createElement('div');
     noResults.className = 'no-results';
     noResults.innerHTML = `
-      <p>No topics found matching "${searchTerm}"</p>
-      <p>Try a different search term or clear your search</p>
+      <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--spacing-md);"></i>
+      <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No topics found</p>
+      <p style="color: var(--color-gray-600);">Try a different search term or clear your search</p>
     `;
     topicsGrid.appendChild(noResults);
   }
@@ -1056,6 +1028,8 @@ function renderTopicsAlphabetically(filteredTopics, topicsGrid) {
 
 function createQuestionNavigation() {
   const questionGrid = document.getElementById('question-grid');
+  if (!questionGrid) return;
+  
   questionGrid.innerHTML = '';
   
   currentQuiz.questions.forEach((_, index) => {
@@ -1193,52 +1167,55 @@ function getFilteredAndSortedTopics() {
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
   
+  if (!topicsGrid) {
+    console.error('Topics grid element not found');
+    return;
+  }
+  
   topicsGrid.innerHTML = '<div class="loading">Loading topics...</div>';
   
   setTimeout(() => {
-    const filteredTopics = getFilteredAndSortedTopics();
-    
-    if (filteredTopics.length === 0) {
-      const noResults = document.createElement('div');
-      noResults.className = 'no-results';
-      noResults.innerHTML = `
-        <p>No topics found matching "${searchTerm}"</p>
-        <p>Try a different search term or clear your search</p>
-      `;
-      topicsGrid.innerHTML = '';
-      topicsGrid.appendChild(noResults);
+    try {
+      const filteredTopics = getFilteredAndSortedTopics();
       
-      // Trigger MathJax after rendering
-      if (window.MathJax) {
-        MathJax.typesetPromise();
+      if (filteredTopics.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'no-results';
+        noResults.innerHTML = `
+          <p>No topics found matching "${searchTerm}"</p>
+          <p>Try a different search term or clear your search</p>
+        `;
+        topicsGrid.innerHTML = '';
+        topicsGrid.appendChild(noResults);
+        return;
       }
-      return;
-    }
-    
-    topicsGrid.innerHTML = '';
-    if (sortBy === 'category') {
-      renderTopicsByCategory(filteredTopics, topicsGrid);
-    } else {
-      renderTopicsAlphabetically(filteredTopics, topicsGrid);
-    }
-    
-    updateStartButton();
-    
-    // Add animation to topic items
-    const topicItems = topicsGrid.querySelectorAll('.topic-item');
-    topicItems.forEach((item, index) => {
-      item.style.opacity = '0';
-      item.style.transform = 'translateY(10px)';
-      setTimeout(() => {
-        item.style.transition = 'all 0.3s ease';
-        item.style.opacity = '1';
-        item.style.transform = 'translateY(0)';
-      }, index * 50);
-    });
-    
-    // Trigger MathJax after rendering all topics
-    if (window.MathJax) {
-      MathJax.typesetPromise();
+      
+      topicsGrid.innerHTML = '';
+      if (sortBy === 'category') {
+        renderTopicsByCategory(filteredTopics, topicsGrid);
+      } else {
+        renderTopicsAlphabetically(filteredTopics, topicsGrid);
+      }
+      
+      updateStartButton();
+      
+      // Fix: Add animation with error handling
+      const topicItems = topicsGrid.querySelectorAll('.topic-item');
+      topicItems.forEach((item, index) => {
+        if (item && item.style) {
+          item.style.opacity = '0';
+          item.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+          }, index * 50);
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error initializing topic selection:', error);
+      topicsGrid.innerHTML = '<div class="error">Error loading topics. Please refresh the page.</div>';
     }
   }, 100);
 }
@@ -1251,12 +1228,13 @@ function createTopicElement(topicId) {
   
   const topicItem = document.createElement('div');
   topicItem.className = 'topic-item';
+  topicItem.setAttribute('data-category', category);
+  
   if (selectedTopics.has(topicId)) {
     topicItem.classList.add('selected');
   }
   topicItem.onclick = () => toggleTopic(topicId, topicItem);
   
-  // Use innerHTML directly for MathJax expressions
   const highlightedTitle = highlightText(topic.title, searchTerm);
   const highlightedDescription = highlightText(topic.description, searchTerm);
   
@@ -1265,47 +1243,16 @@ function createTopicElement(topicId) {
     <div class="topic-content">
       <span class="topic-title">${highlightedTitle}</span>
       <span class="topic-description">${highlightedDescription}</span>
-      <span class="topic-category">${category}</span>
+      <span class="topic-category" data-category="${category}">${category}</span>
     </div>
   `;
   
   return topicItem;
 }
 
-function highlightText(text, searchTerm) {
-  if (!searchTerm || !text) return text;
-  
-  try {
-    // Protect MathJax expressions before highlighting
-    const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$/g;
-    const mathParts = [];
-    let mathIndex = 0;
-    
-    // Replace MathJax expressions with placeholders
-    const textWithPlaceholders = text.replace(mathRegex, (match) => {
-      const placeholder = `__MATH_${mathIndex}__`;
-      mathParts.push(match);
-      mathIndex++;
-      return placeholder;
-    });
-    
-    // Apply highlighting to non-math parts
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
-    
-    // Restore MathJax expressions
-    const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
-      return mathParts[parseInt(index)] || match;
-    });
-    
-    return finalText;
-  } catch (e) {
-    return text;
-  }
-}
-
 function displayQuestion() {
   if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
+    console.error('No questions available to display');
     return;
   }
   
@@ -1322,7 +1269,11 @@ function displayQuestion() {
     const optionDiv = document.createElement('div');
     optionDiv.className = 'option';
     optionDiv.innerHTML = option;
-    optionDiv.onclick = () => selectOption(index);
+    
+    // Fix: Only allow selection if not in marking phase
+    if (!isMarkingPhase) {
+      optionDiv.onclick = () => selectOption(index);
+    }
     
     if (userAnswers[currentQuestionIndex] === index) {
       optionDiv.classList.add('selected');
@@ -1334,14 +1285,16 @@ function displayQuestion() {
   updateNavigation();
   updateQuestionNavigation();
   
-  // Re-render MathJax with proper timing
+  // Fix: Improved MathJax rendering with better error handling
   if (window.MathJax) {
-    // Small delay to ensure DOM is fully updated
     setTimeout(() => {
-      MathJax.typesetPromise().catch(error => {
-        console.error('MathJax typeset error:', error);
-      });
-    }, 50);
+      MathJax.typesetPromise([document.getElementById('question-text'), optionsContainer])
+        .catch(error => {
+          console.warn('MathJax typeset error:', error);
+          // Try fallback rendering
+          MathJax.typeset();
+        });
+    }, 100);
   }
 }
 
@@ -1368,3 +1321,181 @@ function configureMathJax() {
     };
   }
 }
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm || !text) return text;
+  
+  try {
+    const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$/g;
+    const mathParts = [];
+    let mathIndex = 0;
+    
+    const textWithPlaceholders = text.replace(mathRegex, (match) => {
+      const placeholder = `__MATH_${mathIndex}__`;
+      mathParts.push(match);
+      mathIndex++;
+      return placeholder;
+    });
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
+    
+    const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
+      return mathParts[parseInt(index)] || match;
+    });
+    
+    return finalText;
+  } catch (e) {
+    return text;
+  }
+}
+
+function updateQuestionCount() {
+  const questionCountInput = document.getElementById('question-count');
+  if (questionCountInput) {
+    let value = parseInt(questionCountInput.value);
+    
+    if (isNaN(value) || value < 1) {
+      value = 1;
+    }
+    if (value > 200) {
+      value = 200;
+    }
+    
+    questionCountInput.value = value;
+    questionCount = value;
+  }
+}
+
+function startQuiz() {
+  if (selectedTopics.size === 0) {
+    alert('Please select at least one topic');
+    return;
+  }
+  
+  updateQuestionCount();
+  
+  const difficultyInput = document.getElementById('difficulty');
+  const generatePrintInput = document.getElementById('generate-print');
+  
+  const currentDifficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
+  const currentGeneratePrint = generatePrintInput ? generatePrintInput.checked : true;
+  const currentTimerSetting = getCurrentTimerSetting();
+  
+  const allQuestions = [];
+  const selectedTopicsArray = Array.from(selectedTopics);
+  
+  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
+  const remainder = questionCount % selectedTopicsArray.length;
+  
+  let totalAvailableQuestions = 0;
+  selectedTopicsArray.forEach(topicId => {
+    const topic = getTopicInfo(topicId);
+    if (topic && topic.generator) {
+      totalAvailableQuestions += 10; //
+    }
+  });
+  
+  if (totalAvailableQuestions < questionCount) {
+    alert(`Not enough questions available. Maximum available: ${totalAvailableQuestions}`);
+    return;
+  }
+  
+  selectedTopicsArray.forEach((topicId, index) => {
+    const topic = getTopicInfo(topicId);
+    if (topic && topic.generator) {
+      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
+      
+      try {
+        const questions = topic.generator(questionsNeeded);
+        if (questions && questions.length > 0) {
+          allQuestions.push(...questions);
+        }
+      } catch (error) {
+        console.error('Error generating questions for topic:', topicId, error);
+      }
+    }
+  });
+  
+  if (allQuestions.length === 0) {
+    alert('Could not generate any questions. Please try different topics.');
+    return;
+  }
+  
+  if (allQuestions.length < questionCount) {
+    console.warn(`Requested ${questionCount} questions but only got ${allQuestions.length}`);
+  }
+  
+  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
+  
+  currentQuiz = {
+    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInfo(id).title).join(', ')})`,
+    questions: shuffledQuestions,
+    settings: {
+      questionCount: shuffledQuestions.length, // Use actual count
+      timerSetting: currentTimerSetting,
+      difficulty: currentDifficulty,
+      generatePrint: currentGeneratePrint
+    }
+  };
+  
+  userAnswers = new Array(currentQuiz.questions.length).fill(null);
+  timeRemaining = currentTimerSetting;
+  startTime = new Date();
+  
+  createQuestionNavigation();
+  
+  document.getElementById('topic-selection').classList.add('hidden');
+  document.getElementById('quiz-header').classList.remove('hidden');
+  document.getElementById('question-container').classList.remove('hidden');
+  document.getElementById('navigation').classList.remove('hidden');
+  
+  document.getElementById('quiz-title').textContent = currentQuiz.title;
+  
+  // Fix: Initialize timer properly
+  if (currentTimerSetting > 0) {
+    startTimer();
+  } else {
+    document.getElementById('timer').textContent = 'No Timer';
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+  
+  currentQuestionIndex = 0;
+  displayQuestion();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('topic-selection').classList.remove('hidden');
+  
+  setupSearch();
+  initializeTopicSelection();
+  configureMathJax();
+  
+  // Fix: Initialize question count properly
+  updateQuestionCount();
+  
+  // Add event listeners for input changes
+  document.getElementById('question-count').addEventListener('input', updateQuestionCount);
+  document.getElementById('question-count').addEventListener('change', updateQuestionCount);
+  
+  document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
+  document.getElementById('next-btn').addEventListener('click', nextQuestion);
+  document.getElementById('prev-btn').addEventListener('click', previousQuestion);
+  document.getElementById('continue-btn').addEventListener('click', closeFeedback);
+  document.getElementById('try-again-btn').addEventListener('click', restartQuiz);
+  document.getElementById('print-btn').addEventListener('click', printResults);
+  
+  document.getElementById('nav-toggle-btn').addEventListener('click', toggleQuestionNav);
+  document.getElementById('close-nav-panel').addEventListener('click', closeQuestionNav);
+  
+  // Update the validation to use the new function
+  document.getElementById('question-count').addEventListener('change', function() {
+    updateQuestionCount();
+    const value = parseInt(this.value);
+    if (value < 1) this.value = 1;
+    if (value > 200) this.value = 200; // Add upper limit if needed
+  });
+});
