@@ -977,6 +977,73 @@ p {
   }
 }
 
+/* Footer */
+.footer {
+  background-color: var(--color-accent);
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-2xl);
+}
+
+.footer-section h3 {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.footer-section h3 i {
+  color: var(--color-primary);
+}
+
+.footer-section p {
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.6;
+}
+
+.contact-info p {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.contact-info a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.contact-info a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.contact-info i {
+  width: 20px;
+  color: var(--color-primary-light);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-secondary);
+}
+
 @media (max-width: 768px) {
   
   .selection-container {
@@ -1100,8 +1167,45 @@ p {
     width: 100%;
     max-width: 100%;
   }
+  
+    .footer-content {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  .footer-section {
+    text-align: center;
+  }
+  
+  .footer-section h3 {
+    justify-content: center;
+  }
+  
+  .contact-info p {
+    justify-content: center;
+  }
+  
+  .footer-bottom {
+    padding: var(--spacing-md);
+  }
 }
 
+@media (max-width: 480px) {
+  .footer-content {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  
+  .footer-section h3 {
+    font-size: var(--font-size-base);
+  }
+  
+  .contact-info p {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    text-align: center;
+  }
+}
 
 .topic-item[data-category="Algebra"] {
   border-left: 4px solid transparent;

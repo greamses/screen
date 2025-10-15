@@ -250,63 +250,6 @@ function startMarking() {
   markNextQuestion();
 }
 
-function markNextQuestion() {
-  if (markingIndex >= currentQuiz.questions.length) {
-    showResults();
-    return;
-  }
-  
-  currentQuestionIndex = markingIndex;
-  displayQuestion();
-  
-  const question = currentQuiz.questions[currentQuestionIndex];
-  const userAnswer = userAnswers[currentQuestionIndex];
-  const correctAnswer = question.correct;
-  
-  const options = document.querySelectorAll('.option');
-  options.forEach((option, index) => {
-    option.onclick = null;
-    option.classList.remove('correct', 'incorrect');
-    
-    // Fix: Clear previous result icons
-    const existingIcons = option.querySelectorAll('.result-icon');
-    existingIcons.forEach(icon => icon.remove());
-    
-    if (index === correctAnswer) {
-      option.classList.add('correct');
-      option.innerHTML += '<span class="result-icon">✅</span>';
-    } else if (index === userAnswer && userAnswer !== correctAnswer) {
-      option.classList.add('incorrect');
-      option.innerHTML += '<span class="result-icon">❌</span>';
-    }
-  });
-  
-  // Fix: Properly handle the case where user didn't answer
-  if (userAnswer !== correctAnswer && userAnswer !== null) {
-    showFeedback(question);
-  } else {
-    setTimeout(() => {
-      markingIndex++;
-      markNextQuestion();
-    }, 1500);
-  }
-}
-
-function showFeedback(question) {
-  const feedbackPanel = document.getElementById('feedback-panel');
-  const correctAnswerText = document.getElementById('correct-answer-text');
-  const feedbackExplanation = document.getElementById('feedback-explanation');
-  
-  if (correctAnswerText) correctAnswerText.innerHTML = question.options[question.correct];
-  if (feedbackExplanation) feedbackExplanation.innerHTML = question.explanation;
-  
-  if (feedbackPanel) feedbackPanel.classList.add('show');
-  
-  if (window.MathJax) {
-    MathJax.typesetPromise();
-  }
-}
-
 function closeFeedback() {
   const feedbackPanel = document.getElementById('feedback-panel');
   if (feedbackPanel) feedbackPanel.classList.remove('show');
@@ -337,72 +280,6 @@ function showConfetti() {
   setTimeout(() => {
     document.body.removeChild(confettiContainer);
   }, 5000);
-}
-
-function printResults() {
-  if (!currentQuiz.settings.generatePrint) {
-    alert('Printable results were disabled for this quiz');
-    return;
-  }
-  
-  const studentName = document.getElementById('student-name').value || 'Anonymous';
-  const endTime = new Date();
-  const timeTaken = Math.floor((endTime - startTime) / 1000);
-  
-  const correctAnswers = userAnswers.filter((answer, index) =>
-    answer === currentQuiz.questions[index].correct
-  ).length;
-  
-  const totalQuestions = currentQuiz.questions.length;
-  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
-  
-  let grade;
-  if (percentage >= 90) grade = 'A';
-  else if (percentage >= 80) grade = 'B';
-  else if (percentage >= 70) grade = 'C';
-  else if (percentage >= 60) grade = 'D';
-  else grade = 'F';
-  
-  document.getElementById('print-date').textContent = new Date().toLocaleDateString();
-  document.getElementById('print-student-name').textContent = studentName;
-  document.getElementById('print-quiz-title').textContent = currentQuiz.title;
-  document.getElementById('print-quiz-date').textContent = startTime.toLocaleDateString();
-  document.getElementById('print-time-taken').textContent = formatTime(timeTaken);
-  document.getElementById('print-score').textContent = `${correctAnswers}/${totalQuestions}`;
-  document.getElementById('print-percentage').textContent = `${percentage}%`;
-  document.getElementById('print-grade').textContent = grade;
-  
-  const printQuestions = document.getElementById('print-questions');
-  printQuestions.innerHTML = '<h3>Detailed Results:</h3>';
-  
-  currentQuiz.questions.forEach((question, index) => {
-    const userAnswer = userAnswers[index];
-    const isCorrect = userAnswer === question.correct;
-    
-    const questionDiv = document.createElement('div');
-    questionDiv.style.marginBottom = '20px';
-    questionDiv.style.padding = '15px';
-    questionDiv.style.border = '1px solid #ddd';
-    questionDiv.style.borderRadius = '8px';
-    questionDiv.style.pageBreakInside = 'avoid';
-    
-    let questionHTML = `
-      <p><strong>Q${index + 1}:</strong> ${question.question}</p>
-      <p><strong>Your Answer:</strong> ${userAnswer !== null ? question.options[userAnswer] : 'Not answered'} ${isCorrect ? '✅' : '❌'}</p>
-      <p><strong>Correct Answer:</strong> ${question.options[question.correct]}</p>
-    `;
-    
-    if (question.explanation && question.explanation.trim() !== '') {
-      questionHTML += `<p><strong>Explanation:</strong> ${question.explanation}</p>`;
-    }
-    
-    questionDiv.innerHTML = questionHTML;
-    printQuestions.appendChild(questionDiv);
-  });
-  
-  setTimeout(() => {
-    window.print();
-  }, 100);
 }
 
 function toggleQuestionNav() {
@@ -577,123 +454,6 @@ function handleTimeUp() {
   showTimeUpModal();
 }
 
-function showTimeUpModal() {
-  const modal = document.createElement('div');
-  modal.className = 'time-up-modal';
-  modal.innerHTML = `
-        <div class="modal-overlay">
-            <div class="modal-content">
-                <div class="modal-icon">⏰</div>
-                <h3>Time's Up!</h3>
-                <p>The quiz will now be automatically submitted and graded.</p>
-                <button class="btn btn-primary" id="proceed-grading">Proceed to Grading</button>
-            </div>
-        </div>
-    `;
-  
-  document.body.appendChild(modal);
-  
-  const modalStyles = `
-        .time-up-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--spacing-lg);
-        }
-        
-        .modal-content {
-            background: var(--bg-primary);
-            padding: var(--spacing-3xl);
-            border-radius: var(--border-radius-2xl);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: var(--shadow-lg);
-            animation: slideUp 0.3s ease;
-        }
-        
-        .modal-icon {
-            font-size: 3rem;
-            margin-bottom: var(--spacing-lg);
-            animation: bounce 0.5s ease;
-        }
-        
-        .modal-content h3 {
-            color: var(--color-danger);
-            margin-bottom: var(--spacing-md);
-            font-size: var(--font-size-xl);
-        }
-        
-        .modal-content p {
-            color: var(--color-gray-600);
-            margin-bottom: var(--spacing-xl);
-            line-height: 1.5;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-    `;
-  
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = modalStyles;
-  document.head.appendChild(styleSheet);
-  
-  document.getElementById('proceed-grading').addEventListener('click', () => {
-    document.body.removeChild(modal);
-    document.head.removeChild(styleSheet);
-    startMarking();
-  });
-  
-  setTimeout(() => {
-    if (document.body.contains(modal)) {
-      document.body.removeChild(modal);
-      document.head.removeChild(styleSheet);
-      startMarking();
-    }
-  }, 5000);
-}
-
 const timerStyles = `
 .timer {
     transition: all 0.3s ease;
@@ -717,6 +477,19 @@ const timerStyles = `
     animation: shake 0.5s ease;
 }
 
+.result-icon {
+    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.option.correct .result-icon {
+    color: var(--color-success);
+}
+
+.option.incorrect .result-icon {
+    color: var(--color-danger);
+}
+
 @keyframes pulse {
     0%, 100% {
         opacity: 1;
@@ -735,7 +508,7 @@ const timerStyles = `
 }
 
 .timer-dropdown .dropdown-option[data-value="0"] {
-    color: var(--color-neutral-500);
+    color: var(--color-text-light);
     font-style: italic;
 }
 
@@ -752,10 +525,10 @@ const timerStyles = `
 
 .timer-quick-btn {
     padding: 4px 8px;
-    border: 1px solid var(--color-neutral-300);
+    border: 1px solid var(--color-border);
     border-radius: var(--border-radius-sm);
-    background: var(--bg-primary);
-    color: var(--color-neutral-600);
+    background: var(--color-white);
+    color: var(--color-text-light);
     font-size: var(--font-size-xs);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -771,7 +544,17 @@ const timerStyles = `
     color: white;
     border-color: var(--color-primary);
 }
+
+.loading .fa-spinner {
+    margin-right: var(--spacing-sm);
+}
+
+.error .fa-exclamation-triangle {
+    margin-right: var(--spacing-sm);
+    color: var(--color-warning);
+}
 `;
+
 
 function initializeAllDropdowns() {
   initializeCustomDropdown();
@@ -985,7 +768,7 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
       categoryHeader.setAttribute('data-category', category.toLowerCase().replace(/\s+/g, '-')); // Convert to lowercase with dashes
       categoryHeader.innerHTML = `
         <div class="category-title">
-          ${categoryInfo.name}
+          <i class="fas fa-${categoryInfo.icon || 'folder'}"></i> ${categoryInfo.name}
         </div>
         <div class="category-progress">
           <div class="category-progress-bar">
@@ -1009,9 +792,9 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
     const noResults = document.createElement('div');
     noResults.className = 'no-results';
     noResults.innerHTML = `
-      <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--spacing-md);"></i>
+      <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--spacing-md); color: var(--color-text-lighter);"></i>
       <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No topics found</p>
-      <p style="color: var(--color-gray-600);">Try a different search term or clear your search</p>
+      <p style="color: var(--color-text-light);">Try a different search term or clear your search</p>
     `;
     topicsGrid.appendChild(noResults);
   }
@@ -1162,62 +945,6 @@ function getFilteredAndSortedTopics() {
   }
   
   return filteredTopics;
-}
-
-function initializeTopicSelection() {
-  const topicsGrid = document.getElementById('topics-grid');
-  
-  if (!topicsGrid) {
-    console.error('Topics grid element not found');
-    return;
-  }
-  
-  topicsGrid.innerHTML = '<div class="loading">Loading topics...</div>';
-  
-  setTimeout(() => {
-    try {
-      const filteredTopics = getFilteredAndSortedTopics();
-      
-      if (filteredTopics.length === 0) {
-        const noResults = document.createElement('div');
-        noResults.className = 'no-results';
-        noResults.innerHTML = `
-          <p>No topics found matching "${searchTerm}"</p>
-          <p>Try a different search term or clear your search</p>
-        `;
-        topicsGrid.innerHTML = '';
-        topicsGrid.appendChild(noResults);
-        return;
-      }
-      
-      topicsGrid.innerHTML = '';
-      if (sortBy === 'category') {
-        renderTopicsByCategory(filteredTopics, topicsGrid);
-      } else {
-        renderTopicsAlphabetically(filteredTopics, topicsGrid);
-      }
-      
-      updateStartButton();
-      
-      // Fix: Add animation with error handling
-      const topicItems = topicsGrid.querySelectorAll('.topic-item');
-      topicItems.forEach((item, index) => {
-        if (item && item.style) {
-          item.style.opacity = '0';
-          item.style.transform = 'translateY(10px)';
-          setTimeout(() => {
-            item.style.transition = 'all 0.3s ease';
-            item.style.opacity = '1';
-            item.style.transform = 'translateY(0)';
-          }, index * 50);
-        }
-      });
-      
-    } catch (error) {
-      console.error('Error initializing topic selection:', error);
-      topicsGrid.innerHTML = '<div class="error">Error loading topics. Please refresh the page.</div>';
-    }
-  }, 100);
 }
 
 function createTopicElement(topicId) {
@@ -1465,6 +1192,304 @@ function startQuiz() {
   
   currentQuestionIndex = 0;
   displayQuestion();
+}
+
+function markNextQuestion() {
+  if (markingIndex >= currentQuiz.questions.length) {
+    showResults();
+    return;
+  }
+  
+  currentQuestionIndex = markingIndex;
+  displayQuestion();
+  
+  const question = currentQuiz.questions[currentQuestionIndex];
+  const userAnswer = userAnswers[currentQuestionIndex];
+  const correctAnswer = question.correct;
+  
+  const options = document.querySelectorAll('.option');
+  options.forEach((option, index) => {
+    option.onclick = null;
+    option.classList.remove('correct', 'incorrect');
+    
+    // Fix: Clear previous result icons
+    const existingIcons = option.querySelectorAll('.result-icon');
+    existingIcons.forEach(icon => icon.remove());
+    
+    if (index === correctAnswer) {
+      option.classList.add('correct');
+      option.innerHTML += '<span class="result-icon"><i class="fas fa-check-circle"></i></span>';
+    } else if (index === userAnswer && userAnswer !== correctAnswer) {
+      option.classList.add('incorrect');
+      option.innerHTML += '<span class="result-icon"><i class="fas fa-times-circle"></i></span>';
+    }
+  });
+  
+  // Fix: Properly handle the case where user didn't answer
+  if (userAnswer !== correctAnswer && userAnswer !== null) {
+    showFeedback(question);
+  } else {
+    setTimeout(() => {
+      markingIndex++;
+      markNextQuestion();
+    }, 1500);
+  }
+}
+
+function showFeedback(question) {
+  const feedbackPanel = document.getElementById('feedback-panel');
+  const correctAnswerText = document.getElementById('correct-answer-text');
+  const feedbackExplanation = document.getElementById('feedback-explanation');
+  
+  if (correctAnswerText) correctAnswerText.innerHTML = question.options[question.correct];
+  if (feedbackExplanation) feedbackExplanation.innerHTML = question.explanation;
+  
+  if (feedbackPanel) feedbackPanel.classList.add('show');
+  
+  if (window.MathJax) {
+    MathJax.typesetPromise();
+  }
+}
+
+function showTimeUpModal() {
+  const modal = document.createElement('div');
+  modal.className = 'time-up-modal';
+  modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-icon"><i class="fas fa-clock"></i></div>
+                <h3>Time's Up!</h3>
+                <p>The quiz will now be automatically submitted and graded.</p>
+                <button class="btn btn-primary" id="proceed-grading">Proceed to Grading</button>
+            </div>
+        </div>
+    `;
+  
+  document.body.appendChild(modal);
+  
+  const modalStyles = `
+        .time-up-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+        
+        .modal-content {
+            background: var(--bg-primary);
+            padding: var(--spacing-3xl);
+            border-radius: var(--border-radius-2xl);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-lg);
+            color: var(--color-warning);
+            animation: bounce 0.5s ease;
+        }
+        
+        .modal-content h3 {
+            color: var(--color-danger);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-size-xl);
+        }
+        
+        .modal-content p {
+            color: var(--color-text-light);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    `;
+  
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = modalStyles;
+  document.head.appendChild(styleSheet);
+  
+  document.getElementById('proceed-grading').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    document.head.removeChild(styleSheet);
+    startMarking();
+  });
+  
+  setTimeout(() => {
+    if (document.body.contains(modal)) {
+      document.body.removeChild(modal);
+      document.head.removeChild(styleSheet);
+      startMarking();
+    }
+  }, 5000);
+}
+
+function printResults() {
+  if (!currentQuiz.settings.generatePrint) {
+    alert('Printable results were disabled for this quiz');
+    return;
+  }
+  
+  const studentName = document.getElementById('student-name').value || 'Anonymous';
+  const endTime = new Date();
+  const timeTaken = Math.floor((endTime - startTime) / 1000);
+  
+  const correctAnswers = userAnswers.filter((answer, index) =>
+    answer === currentQuiz.questions[index].correct
+  ).length;
+  
+  const totalQuestions = currentQuiz.questions.length;
+  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+  
+  let grade;
+  if (percentage >= 90) grade = 'A';
+  else if (percentage >= 80) grade = 'B';
+  else if (percentage >= 70) grade = 'C';
+  else if (percentage >= 60) grade = 'D';
+  else grade = 'F';
+  
+  document.getElementById('print-date').textContent = new Date().toLocaleDateString();
+  document.getElementById('print-student-name').textContent = studentName;
+  document.getElementById('print-quiz-title').textContent = currentQuiz.title;
+  document.getElementById('print-quiz-date').textContent = startTime.toLocaleDateString();
+  document.getElementById('print-time-taken').textContent = formatTime(timeTaken);
+  document.getElementById('print-score').textContent = `${correctAnswers}/${totalQuestions}`;
+  document.getElementById('print-percentage').textContent = `${percentage}%`;
+  document.getElementById('print-grade').textContent = grade;
+  
+  const printQuestions = document.getElementById('print-questions');
+  printQuestions.innerHTML = '<h3>Detailed Results:</h3>';
+  
+  currentQuiz.questions.forEach((question, index) => {
+    const userAnswer = userAnswers[index];
+    const isCorrect = userAnswer === question.correct;
+    
+    const questionDiv = document.createElement('div');
+    questionDiv.style.marginBottom = '20px';
+    questionDiv.style.padding = '15px';
+    questionDiv.style.border = '1px solid #ddd';
+    questionDiv.style.borderRadius = '8px';
+    questionDiv.style.pageBreakInside = 'avoid';
+    
+    let questionHTML = `
+      <p><strong>Q${index + 1}:</strong> ${question.question}</p>
+      <p><strong>Your Answer:</strong> ${userAnswer !== null ? question.options[userAnswer] : 'Not answered'} ${isCorrect ? '<i class="fas fa-check" style="color: green;"></i>' : '<i class="fas fa-times" style="color: red;"></i>'}</p>
+      <p><strong>Correct Answer:</strong> ${question.options[question.correct]}</p>
+    `;
+    
+    if (question.explanation && question.explanation.trim() !== '') {
+      questionHTML += `<p><strong>Explanation:</strong> ${question.explanation}</p>`;
+    }
+    
+    questionDiv.innerHTML = questionHTML;
+    printQuestions.appendChild(questionDiv);
+  });
+  
+  setTimeout(() => {
+    window.print();
+  }, 100);
+}
+
+function initializeTopicSelection() {
+  const topicsGrid = document.getElementById('topics-grid');
+  
+  if (!topicsGrid) {
+    console.error('Topics grid element not found');
+    return;
+  }
+  
+  topicsGrid.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading topics...</div>';
+  
+  setTimeout(() => {
+    try {
+      const filteredTopics = getFilteredAndSortedTopics();
+      
+      if (filteredTopics.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'no-results';
+        noResults.innerHTML = `
+          <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--spacing-md); color: var(--color-text-lighter);"></i>
+          <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No topics found</p>
+          <p style="color: var(--color-text-light);">Try a different search term or clear your search</p>
+        `;
+        topicsGrid.innerHTML = '';
+        topicsGrid.appendChild(noResults);
+        return;
+      }
+      
+      topicsGrid.innerHTML = '';
+      if (sortBy === 'category') {
+        renderTopicsByCategory(filteredTopics, topicsGrid);
+      } else {
+        renderTopicsAlphabetically(filteredTopics, topicsGrid);
+      }
+      
+      updateStartButton();
+      
+      // Fix: Add animation with error handling
+      const topicItems = topicsGrid.querySelectorAll('.topic-item');
+      topicItems.forEach((item, index) => {
+        if (item && item.style) {
+          item.style.opacity = '0';
+          item.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+          }, index * 50);
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error initializing topic selection:', error);
+      topicsGrid.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Error loading topics. Please refresh the page.</div>';
+    }
+  }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
