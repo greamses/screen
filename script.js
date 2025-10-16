@@ -1665,16 +1665,6 @@ function createLoadingOverlay() {
   return overlay;
 }
 
-const originalDisplayQuestion = displayQuestion;
-displayQuestion = function() {
-  const questionContainer = document.getElementById('question-container');
-  if (questionContainer) {
-    questionContainer.classList.add('mathjax-loading');
-  }
-  
-  originalDisplayQuestion.apply(this, arguments);
-};
-
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
   
@@ -2018,9 +2008,149 @@ function hideMathJaxOverlay() {
 function skipMathJax() {
   console.log('User skipped MathJax loading');
   mathJaxReady = true;
+  
+  // Immediately apply fallback to all visible math elements
+  applyMathFallbackToAll();
+  
   hideMathJaxOverlay();
   initializeApp();
 }
+
+function applyMathFallbackToAll() {
+  console.log('Applying math fallback to all elements');
+  
+  // Apply fallback to question elements if they exist
+  const mathElements = [
+    document.getElementById('question-text'),
+    document.getElementById('options'),
+    document.getElementById('correct-answer-text'),
+    document.getElementById('feedback-explanation')
+  ].filter(el => el);
+  
+  mathElements.forEach(displayMathFallback);
+  
+  // Apply fallback to topic elements
+  const topicElements = document.querySelectorAll('.topic-description, .topic-title');
+  topicElements.forEach(displayMathFallback);
+  
+  console.log(`Applied fallback to ${mathElements.length + topicElements.length} elements`);
+}
+
+
+function safeRenderMathJax() {
+  const overlay = document.querySelector('.loading-overlay');
+  
+  // If user explicitly skipped, immediately use fallback
+  if (window.mathJaxSkipped) {
+    applyMathFallbackToAll();
+    hideMathJaxOverlay();
+    return Promise.resolve();
+  }
+  
+  return renderMathJax()
+    .then(() => {
+      console.log('MathJax rendering completed successfully');
+      hideMathJaxOverlay();
+      
+      // Double-check if any LaTeX remains and apply fallback if needed
+      setTimeout(() => checkForRemainingLatex(), 1000);
+    })
+    .catch(error => {
+      console.error('MathJax rendering failed, using fallback:', error);
+      applyMathFallbackToAll();
+      hideMathJaxOverlay();
+    });
+}
+
+function checkForRemainingLatex() {
+  // Check if there's still LaTeX code visible in key elements
+  const elementsToCheck = [
+    document.getElementById('question-text'),
+    document.getElementById('options'),
+    ...document.querySelectorAll('.topic-description, .topic-title')
+  ].filter(el => el);
+  
+  let hasRemainingLatex = false;
+  
+  elementsToCheck.forEach(element => {
+    if (containsLaTeX(element.innerHTML)) {
+      console.log('Found remaining LaTeX after MathJax render, applying fallback');
+      displayMathFallback(element);
+      hasRemainingLatex = true;
+    }
+  });
+  
+  if (hasRemainingLatex) {
+    showFallbackWarning();
+  }
+}
+
+function containsLaTeX(text) {
+  if (!text) return false;
+  
+  const latexPatterns = [
+    /\\\(/,
+    /\\\)/,
+    /\\\[/,
+    /\\\]/,
+    /\$\$/,
+    /\\frac\{/,
+    /\\sqrt\{/,
+    /\\[a-zA-Z]+\{/
+  ];
+  
+  return latexPatterns.some(pattern => pattern.test(text));
+}
+
+function skipMathJax() {
+  console.log('User skipped MathJax loading');
+  mathJaxReady = true;
+  window.mathJaxSkipped = true; // Global flag
+  
+  // Immediately apply fallback to all visible math elements
+  applyMathFallbackToAll();
+  
+  hideMathJaxOverlay();
+  initializeApp();
+}
+
+const originalDisplayQuestion = displayQuestion;
+displayQuestion = function() {
+  const questionContainer = document.getElementById('question-container');
+  if (questionContainer) {
+    questionContainer.classList.add('mathjax-loading');
+  }
+  
+  originalDisplayQuestion.apply(this, arguments);
+  
+  // If MathJax was skipped, immediately apply fallback
+  if (window.mathJaxSkipped) {
+    setTimeout(() => {
+      const questionText = document.getElementById('question-text');
+      const options = document.getElementById('options');
+      if (questionText) displayMathFallback(questionText);
+      if (options) {
+        const optionElements = options.querySelectorAll('.option');
+        optionElements.forEach(displayMathFallback);
+      }
+    }, 100);
+  }
+};
+
+const originalInitializeTopicSelection = initializeTopicSelection;
+initializeTopicSelection = function() {
+  originalInitializeTopicSelection.apply(this, arguments);
+  
+  // If MathJax was skipped, immediately apply fallback to topics
+  if (window.mathJaxSkipped) {
+    setTimeout(() => {
+      const topicDescriptions = document.querySelectorAll('.topic-description');
+      const topicTitles = document.querySelectorAll('.topic-title');
+      topicDescriptions.forEach(displayMathFallback);
+      topicTitles.forEach(displayMathFallback);
+    }, 200);
+  }
+};
 
 function displayMathFallback(element) {
   if (!element || !element.innerHTML) return;
