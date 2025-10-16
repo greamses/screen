@@ -1,5 +1,5 @@
 // algebraic.js
-export function generateAlgebraicExpressionQuestions(count = 10, questionType = 'all') {
+ function generateAlgebraicExpressionQuestions(count = 10, questionType = 'all') {
   // Validate input parameters
   if (typeof count !== 'number' || count < 1 || count > 50) {
     count = 10;

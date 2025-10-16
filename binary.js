@@ -1,4 +1,4 @@
-export function generateBinaryQuestions(count = 10, questionType = 'all') {
+ function generateBinaryQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
   // Filter question types based on the parameter

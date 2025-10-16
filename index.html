@@ -10,7 +10,22 @@
     <link rel="stylesheet" href="./main.css" type="text/css" media="all" />
     <link rel="stylesheet" href="./category.css" type="text/css" media="all" />
     
-    
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body>
@@ -236,9 +251,23 @@
     </div>
     
     <div class="safe-area-spacer"></div>
-    <script src="script.js" type="module"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+<!-- At the bottom of your body -->
+<div class="safe-area-spacer"></div>
+
+<!-- Load all question generator scripts first -->
+<script src="./binary.js"></script>
+<script src="./roman.js"></script>
+<script src="./sequences.js"></script>
+<script src="./permutation.js"></script>
+<script src="./algebra1.js"></script>
+<script src="./algebra2.js"></script>
+<script src="./algebra3.js"></script>
+
+<!-- Then load quiz data and main script -->
+<script src="./quizData.js"></script>
+<script src="./script.js"></script>
+
 </body>
 
 </html>

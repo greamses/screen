@@ -1,13 +1,6 @@
-import { generateBinaryQuestions } from './binary.js';
-import { generateRomanNumeralQuestions } from './roman.js';
-import { generateSeriesQuestions } from './sequences.js';
-import { generatePermutationCombinationQuestions } from './permutation.js';
-import { generateAlgebraicExpressionQuestions } from './algebra-one.js';
-import { generateIndicesQuestions } from './algebra-two.js';
-import { generateAdvancedIndicesQuestions } from './algebra-three.js';
+// Remove the duplicate declaration at the bottom and fix the structure
 
-// Alphabetically organized quiz topics
-export const quizTopics = {
+const quizTopics = {
   // A
   'all-advanced-indices': {
     title: 'All Advanced Laws of Indices',
@@ -189,7 +182,7 @@ export const quizTopics = {
   }
 };
 
-export const quizCategories = {
+const quizCategories = {
   'algebra': {
     name: 'Algebra',
     topics: [
@@ -230,15 +223,15 @@ export const quizCategories = {
   }
 };
 
-export function getAllQuizTopics() {
+function getAllQuizTopics() {
   return Object.keys(quizTopics);
 }
 
-export function getTopicsByCategory(category) {
+function getTopicsByCategory(category) {
   return quizCategories[category]?.topics || [];
 }
 
-export function getCategoryForTopic(topic) {
+function getCategoryForTopic(topic) {
   for (const [category, data] of Object.entries(quizCategories)) {
     if (data.topics.includes(topic)) {
       return data.name;
@@ -248,14 +241,27 @@ export function getCategoryForTopic(topic) {
 }
 
 // Helper function to get topic info
-export function getTopicInfo(topic) {
+function getTopicInfo(topic) {
   return quizTopics[topic] || null;
 }
 
-export function getAllCategories() {
+function getAllCategories() {
   return Object.keys(quizCategories);
 }
 
-export function getCategoryInfo(category) {
+function getCategoryInfo(category) {
   return quizCategories[category] || null;
 }
+
+// Export to global scope
+window.quizData = {
+  quizTopics,
+  quizCategories,
+  getAllQuizTopics,
+  getTopicsByCategory,
+  getCategoryForTopic,
+  getTopicInfo,
+  getAllCategories,
+  getCategoryInfo
+};
+

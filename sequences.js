@@ -1,4 +1,4 @@
-export function generateSeriesQuestions(count = 10, questionType = 'all') {
+ function generateSeriesQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
   switch (questionType) {

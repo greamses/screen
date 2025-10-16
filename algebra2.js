@@ -1,5 +1,5 @@
 // indices.js - Laws of Indices Question Generator
-export function generateIndicesQuestions(count = 10, questionType = 'all') {
+ function generateIndicesQuestions(count = 10, questionType = 'all') {
   // Validate input parameters
   if (typeof count !== 'number' || count < 1 || count > 50) {
     count = 10;

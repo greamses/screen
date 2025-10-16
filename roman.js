@@ -1,4 +1,4 @@
-export function generateRomanNumeralQuestions(count = 10, questionType = 'all') {
+ function generateRomanNumeralQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
   // Filter question types based on the parameter

@@ -1,13 +1,13 @@
-import {
-  quizTopics,
-  quizCategories,
-  getAllQuizTopics,
-  getTopicsByCategory,
-  getCategoryForTopic,
-  getTopicInfo,
-  getAllCategories,
-  getCategoryInfo
-} from './quizData.js';
+const {
+  quizTopics: topics,
+  quizCategories: categories,
+  getAllQuizTopics: getAllTopics,
+  getTopicsByCategory: getTopicsByCat,
+  getCategoryForTopic: getCategoryForTop,
+  getTopicInfo: getTopicInf,
+  getAllCategories: getAllCats,
+  getCategoryInfo: getCategoryInf
+} = window.quizData;
 
 const timerDropdown = document.getElementById('timer-dropdown');
 const selectedTimerOption = timerDropdown ? timerDropdown.querySelector('.dropdown-option.selected') : null;
@@ -52,10 +52,10 @@ function toggleTopic(topicId, topicElement) {
 }
 
 function refreshCategoryProgress() {
-  const categories = getAllCategories();
+  const categories = getAllCats();
   
   categories.forEach(category => {
-    const categoryTopics = getTopicsByCategory(category);
+    const categoryTopics = getTopicsByCat(category);
     const selectedInCategory = categoryTopics.filter(topicId =>
       selectedTopics.has(topicId)
     ).length;
@@ -74,6 +74,177 @@ function refreshCategoryProgress() {
       }
     }
   });
+}
+
+function getFilteredAndSortedTopics() {
+  const allTopics = getAllTopics(); // Changed from getAllQuizTopics()
+  
+  let filteredTopics = allTopics.filter(topicId => {
+    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    return topic && (
+      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      topic.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+  
+  if (sortBy === 'alphabetical') {
+    filteredTopics.sort((a, b) => {
+      const topicA = getTopicInf(a); // Changed from getTopicInfo()
+      const topicB = getTopicInf(b); // Changed from getTopicInfo()
+      return topicA.title.localeCompare(topicB.title);
+    });
+  } else if (sortBy === 'category') {
+    const categories = getAllCats(); // Changed from getAllCategories()
+    const categorizedTopics = {};
+    
+    categories.forEach(category => {
+      categorizedTopics[category] = getTopicsByCat(category) // Changed from getTopicsByCategory()
+        .filter(topicId => filteredTopics.includes(topicId))
+        .sort((a, b) => {
+          const topicA = getTopicInf(a); // Changed from getTopicInfo()
+          const topicB = getTopicInf(b); // Changed from getTopicInfo()
+          return topicA.title.localeCompare(topicB.title);
+        });
+    });
+    
+    filteredTopics = [];
+    categories.forEach(category => {
+      if (categorizedTopics[category].length > 0) {
+        filteredTopics = filteredTopics.concat(categorizedTopics[category]);
+      }
+    });
+  }
+  
+  return filteredTopics;
+}
+
+function createTopicElement(topicId) {
+  const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+  if (!topic) return null;
+  
+  const category = getCategoryForTop(topicId); // Changed from getCategoryForTopic()
+  
+  const topicItem = document.createElement('div');
+  topicItem.className = 'topic-item';
+  topicItem.setAttribute('data-category', category);
+  
+  if (selectedTopics.has(topicId)) {
+    topicItem.classList.add('selected');
+  }
+  topicItem.onclick = () => toggleTopic(topicId, topicItem);
+  
+  const highlightedTitle = highlightText(topic.title, searchTerm);
+  const highlightedDescription = highlightText(topic.description, searchTerm);
+  
+  topicItem.innerHTML = `
+    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
+    <div class="topic-content">
+      <span class="topic-title">${highlightedTitle}</span>
+      <span class="topic-description">${highlightedDescription}</span>
+      <span class="topic-category" data-category="${category}">${category}</span>
+    </div>
+  `;
+  
+  return topicItem;
+}
+
+function startQuiz() {
+  if (selectedTopics.size === 0) {
+    alert('Please select at least one topic');
+    return;
+  }
+  
+  updateQuestionCount();
+  
+  const difficultyInput = document.getElementById('difficulty');
+  const generatePrintInput = document.getElementById('generate-print');
+  
+  const currentDifficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
+  const currentGeneratePrint = generatePrintInput ? generatePrintInput.checked : true;
+  const currentTimerSetting = getCurrentTimerSetting();
+  
+  const allQuestions = [];
+  const selectedTopicsArray = Array.from(selectedTopics);
+  
+  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
+  const remainder = questionCount % selectedTopicsArray.length;
+  
+  let totalAvailableQuestions = 0;
+  selectedTopicsArray.forEach(topicId => {
+    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    if (topic && topic.generator) {
+      totalAvailableQuestions += 10;
+    }
+  });
+  
+  if (totalAvailableQuestions < questionCount) {
+    alert(`Not enough questions available. Maximum available: ${totalAvailableQuestions}`);
+    return;
+  }
+  
+  selectedTopicsArray.forEach((topicId, index) => {
+    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    if (topic && topic.generator) {
+      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
+      
+      try {
+        const questions = topic.generator(questionsNeeded);
+        if (questions && questions.length > 0) {
+          allQuestions.push(...questions);
+        }
+      } catch (error) {
+        console.error('Error generating questions for topic:', topicId, error);
+      }
+    }
+  });
+  
+  if (allQuestions.length === 0) {
+    alert('Could not generate any questions. Please try different topics.');
+    return;
+  }
+  
+  if (allQuestions.length < questionCount) {
+    console.warn(`Requested ${questionCount} questions but only got ${allQuestions.length}`);
+  }
+  
+  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
+  
+  currentQuiz = {
+    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInf(id).title).join(', ')})`, // Changed from getTopicInfo()
+    questions: shuffledQuestions,
+    settings: {
+      questionCount: shuffledQuestions.length,
+      timerSetting: currentTimerSetting,
+      difficulty: currentDifficulty,
+      generatePrint: currentGeneratePrint
+    }
+  };
+  
+  userAnswers = new Array(currentQuiz.questions.length).fill(null);
+  timeRemaining = currentTimerSetting;
+  startTime = new Date();
+  
+  createQuestionNavigation();
+  
+  document.getElementById('topic-selection').classList.add('hidden');
+  document.getElementById('quiz-header').classList.remove('hidden');
+  document.getElementById('question-container').classList.remove('hidden');
+  document.getElementById('navigation').classList.remove('hidden');
+  
+  document.getElementById('quiz-title').textContent = currentQuiz.title;
+  
+  if (currentTimerSetting > 0) {
+    startTimer();
+  } else {
+    document.getElementById('timer').textContent = 'No Timer';
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+  
+  currentQuestionIndex = 0;
+  displayQuestion();
 }
 
 function setupSearch() {
@@ -905,126 +1076,6 @@ function formatTime(seconds) {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function getFilteredAndSortedTopics() {
-  const allTopics = getAllQuizTopics();
-  
-  let filteredTopics = allTopics.filter(topicId => {
-    const topic = getTopicInfo(topicId);
-    return topic && (
-      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topic.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  
-  if (sortBy === 'alphabetical') {
-    filteredTopics.sort((a, b) => {
-      const topicA = getTopicInfo(a);
-      const topicB = getTopicInfo(b);
-      return topicA.title.localeCompare(topicB.title);
-    });
-  } else if (sortBy === 'category') {
-    const categories = getAllCategories();
-    const categorizedTopics = {};
-    
-    categories.forEach(category => {
-      categorizedTopics[category] = getTopicsByCategory(category)
-        .filter(topicId => filteredTopics.includes(topicId))
-        .sort((a, b) => {
-          const topicA = getTopicInfo(a);
-          const topicB = getTopicInfo(b);
-          return topicA.title.localeCompare(topicB.title);
-        });
-    });
-    
-    filteredTopics = [];
-    categories.forEach(category => {
-      if (categorizedTopics[category].length > 0) {
-        filteredTopics = filteredTopics.concat(categorizedTopics[category]);
-      }
-    });
-  }
-  
-  return filteredTopics;
-}
-
-function createTopicElement(topicId) {
-  const topic = getTopicInfo(topicId);
-  if (!topic) return null;
-  
-  const category = getCategoryForTopic(topicId);
-  
-  const topicItem = document.createElement('div');
-  topicItem.className = 'topic-item';
-  topicItem.setAttribute('data-category', category);
-  
-  if (selectedTopics.has(topicId)) {
-    topicItem.classList.add('selected');
-  }
-  topicItem.onclick = () => toggleTopic(topicId, topicItem);
-  
-  const highlightedTitle = highlightText(topic.title, searchTerm);
-  const highlightedDescription = highlightText(topic.description, searchTerm);
-  
-  topicItem.innerHTML = `
-    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
-    <div class="topic-content">
-      <span class="topic-title">${highlightedTitle}</span>
-      <span class="topic-description">${highlightedDescription}</span>
-      <span class="topic-category" data-category="${category}">${category}</span>
-    </div>
-  `;
-  
-  return topicItem;
-}
-
-function displayQuestion() {
-  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
-    console.error('No questions available to display');
-    return;
-  }
-  
-  const question = currentQuiz.questions[currentQuestionIndex];
-  
-  document.getElementById('question-number').textContent =
-    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
-  document.getElementById('question-text').innerHTML = question.question;
-  
-  const optionsContainer = document.getElementById('options');
-  optionsContainer.innerHTML = '';
-  
-  question.options.forEach((option, index) => {
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'option';
-    optionDiv.innerHTML = option;
-    
-    // Fix: Only allow selection if not in marking phase
-    if (!isMarkingPhase) {
-      optionDiv.onclick = () => selectOption(index);
-    }
-    
-    if (userAnswers[currentQuestionIndex] === index) {
-      optionDiv.classList.add('selected');
-    }
-    
-    optionsContainer.appendChild(optionDiv);
-  });
-  
-  updateNavigation();
-  updateQuestionNavigation();
-  
-  // Fix: Improved MathJax rendering with better error handling
-  if (window.MathJax) {
-    setTimeout(() => {
-      MathJax.typesetPromise([document.getElementById('question-text'), optionsContainer])
-        .catch(error => {
-          console.warn('MathJax typeset error:', error);
-          // Try fallback rendering
-          MathJax.typeset();
-        });
-    }, 100);
-  }
-}
-
 function configureMathJax() {
   if (window.MathJax) {
     MathJax = {
@@ -1524,3 +1575,109 @@ document.addEventListener('DOMContentLoaded', function() {
     if (value > 200) this.value = 200; // Add upper limit if needed
   });
 });
+
+// MathJax handling
+function waitForMathJax() {
+  return new Promise((resolve) => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      console.log('MathJax already loaded');
+      resolve();
+      return;
+    }
+    
+    // Set up a listener for when MathJax is ready
+    window.onMathJaxReady = resolve;
+    
+    // Fallback: check every 500ms
+    const checkInterval = setInterval(() => {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 500);
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      console.warn('MathJax loading timeout - proceeding without it');
+      resolve();
+    }, 10000);
+  });
+}
+
+function renderMathJax() {
+  if (!window.MathJax) {
+    console.warn('MathJax not available');
+    return Promise.resolve();
+  }
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const elements = [
+        document.getElementById('question-text'),
+        document.getElementById('options')
+      ].filter(el => el);
+      
+      if (window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise(elements)
+          .then(() => {
+            console.log('MathJax rendering complete');
+            resolve();
+          })
+          .catch(error => {
+            console.warn('MathJax typeset error:', error);
+            // Try fallback
+            if (window.MathJax.typeset) {
+              window.MathJax.typeset();
+            }
+            resolve();
+          });
+      } else if (window.MathJax.typeset) {
+        window.MathJax.typeset();
+        resolve();
+      } else {
+        resolve();
+      }
+    }, 100);
+  });
+}
+
+function displayQuestion() {
+  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
+    console.error('No questions available to display');
+    return;
+  }
+  
+  const question = currentQuiz.questions[currentQuestionIndex];
+  
+  document.getElementById('question-number').textContent =
+    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+  document.getElementById('question-text').innerHTML = question.question;
+  
+  const optionsContainer = document.getElementById('options');
+  optionsContainer.innerHTML = '';
+  
+  question.options.forEach((option, index) => {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option';
+    optionDiv.innerHTML = option;
+    
+    if (!isMarkingPhase) {
+      optionDiv.onclick = () => selectOption(index);
+    }
+    
+    if (userAnswers[currentQuestionIndex] === index) {
+      optionDiv.classList.add('selected');
+    }
+    
+    optionsContainer.appendChild(optionDiv);
+  });
+  
+  updateNavigation();
+  updateQuestionNavigation();
+  
+  // Render MathJax
+  renderMathJax().then(() => {
+    console.log('Question displayed with MathJax');
+  });
+}

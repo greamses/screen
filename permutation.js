@@ -1,4 +1,4 @@
-export function generatePermutationCombinationQuestions(count = 10, questionType = 'all') {
+ function generatePermutationCombinationQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
   switch (questionType) {
