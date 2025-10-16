@@ -545,7 +545,6 @@
                     progressBar.style.animation = 'progress 30s linear';
                 }
                 
-                // Auto-hide after 30 seconds
                 setTimeout(() => {
                     hideFooter();
                 }, 60000);
@@ -554,18 +553,18 @@
             function hideFooter() {
                 scrollingFooter.style.display = 'none';
                 
-                setTimeout(showFooter, 120000);
+                setTimeout(showFooter, 30000);
             }
             
             if (closeButton) {
                 closeButton.addEventListener('click', function() {
                     hideFooter();
-                    // Don't show again if manually closed
+
                     clearTimeout(displayInterval);
                 });
             }
             
-            setTimeout(showFooter, 120000);
+            setTimeout(showFooter, 1000);
             
 
         }
