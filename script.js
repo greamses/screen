@@ -1321,16 +1321,19 @@ function printResults() {
 function initializeWhenReady() {
   if (mathJaxReady && domContentLoaded && !initializationPending) {
     initializationPending = true;
+    
+    hideMathJaxOverlay();
     initializeApp();
   }
 }
 
 function configureMathJax() {
   if (window.MathJax) {
+    console.log('MathJax already loaded, configuring...');
     window.MathJax = {
       startup: {
         pageReady: () => {
-          console.log('MathJax is ready');
+          console.log('MathJax startup complete');
           mathJaxReady = true;
           if (window.onMathJaxReady) {
             window.onMathJaxReady();
@@ -1354,54 +1357,106 @@ function configureMathJax() {
         renderActions: {
           addMenu: [0, '', '']
         }
+      },
+      // Add error handling
+      loader: {
+        load: ['[tex]/ams'],
+        source: {
+          '[tex]/ams': 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-ams.js'
+        }
       }
     };
   } else {
-    console.warn('MathJax not found, proceeding without it');
-    setTimeout(() => {
-      mathJaxReady = true;
-      initializeWhenReady();
-    }, 1000);
+    console.warn('MathJax not found, loading dynamically...');
+    loadMathJaxDynamically();
   }
+}
+
+function loadMathJaxDynamically() {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+  script.id = 'MathJax-script';
+  script.async = true;
+  
+  script.onload = () => {
+    console.log('MathJax dynamically loaded');
+    // Reconfigure after dynamic load
+    configureMathJax();
+  };
+  
+  script.onerror = () => {
+    console.error('Failed to load MathJax dynamically');
+    mathJaxReady = true; // Proceed without MathJax
+    initializeWhenReady();
+  };
+  
+  document.head.appendChild(script);
 }
 
 function waitForMathJax() {
   return new Promise((resolve) => {
     if (window.MathJax && mathJaxReady) {
       console.log('MathJax already loaded and ready');
+      hideMathJaxOverlay(); // Hide overlay if already ready
       resolve();
       return;
     }
     
+    // Show loading overlay when waiting for MathJax
+    const overlay = createLoadingOverlay();
+    
+    // Check if MathJax is already in the process of loading
     if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-      window.MathJax.startup.promise.then(() => {
-        mathJaxReady = true;
-        resolve();
-      }).catch(error => {
-        console.warn('MathJax startup error:', error);
-        mathJaxReady = true;
-        resolve();
-      });
+      console.log('MathJax startup promise found, waiting...');
+      window.MathJax.startup.promise
+        .then(() => {
+          console.log('MathJax startup promise resolved');
+          mathJaxReady = true;
+          hideMathJaxOverlay();
+          resolve();
+        })
+        .catch(error => {
+          console.warn('MathJax startup promise rejected:', error);
+          mathJaxReady = true; // Proceed without MathJax
+          hideMathJaxOverlay();
+          resolve();
+        });
+    } else if (window.MathJax && window.MathJax.typesetPromise) {
+      // MathJax is loaded but startup might be complete
+      console.log('MathJax typesetPromise available');
+      mathJaxReady = true;
+      hideMathJaxOverlay();
+      resolve();
     } else {
-      window.onMathJaxReady = () => {
-        mathJaxReady = true;
-        resolve();
+      // MathJax not loaded yet, set up polling
+      console.log('Setting up MathJax polling');
+      let attempts = 0;
+      const maxAttempts = 30; // 15 seconds max
+      
+      const checkMathJax = () => {
+        attempts++;
+        
+        if (window.MathJax && (window.MathJax.typesetPromise || window.MathJax.typeset)) {
+          console.log(`MathJax ready after ${attempts} attempts`);
+          mathJaxReady = true;
+          hideMathJaxOverlay();
+          resolve();
+          return;
+        }
+        
+        if (attempts >= maxAttempts) {
+          console.warn('MathJax loading timeout - proceeding without it');
+          mathJaxReady = true; // Proceed without MathJax
+          hideMathJaxOverlay();
+          showFallbackWarning();
+          resolve();
+          return;
+        }
+        
+        setTimeout(checkMathJax, 500);
       };
       
-      const checkInterval = setInterval(() => {
-        if (window.MathJax && (window.MathJax.typesetPromise || window.MathJax.typeset)) {
-          clearInterval(checkInterval);
-          mathJaxReady = true;
-          resolve();
-        }
-      }, 500);
-      
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        console.warn('MathJax loading timeout - proceeding without it');
-        mathJaxReady = true;
-        resolve();
-      }, 10000);
+      checkMathJax();
     }
   });
 }
@@ -1409,6 +1464,7 @@ function waitForMathJax() {
 function displayQuestion() {
   if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
     console.error('No questions available to display');
+    hideMathJaxOverlay(); // Ensure overlay is hidden on error
     return;
   }
   
@@ -1440,16 +1496,24 @@ function displayQuestion() {
   updateNavigation();
   updateQuestionNavigation();
   
-  renderMathJax().then(() => {
-    console.log('Question displayed with MathJax');
+  // Show loading state while rendering MathJax
+  const questionContainer = document.getElementById('question-container');
+  if (questionContainer) {
+    questionContainer.classList.add('mathjax-loading');
+  }
+  
+  safeRenderMathJax().then(() => {
+    console.log('Question displayed with MathJax or fallback');
     const questionContainer = document.getElementById('question-container');
     if (questionContainer) {
+      questionContainer.classList.remove('mathjax-loading');
       questionContainer.style.visibility = 'visible';
     }
   }).catch(error => {
-    console.error('Error rendering MathJax:', error);
+    console.error('Error in displayQuestion MathJax:', error);
     const questionContainer = document.getElementById('question-container');
     if (questionContainer) {
+      questionContainer.classList.remove('mathjax-loading');
       questionContainer.style.visibility = 'visible';
     }
   });
@@ -1601,7 +1665,6 @@ function createLoadingOverlay() {
   return overlay;
 }
 
-// Enhanced displayQuestion with loading state
 const originalDisplayQuestion = displayQuestion;
 displayQuestion = function() {
   const questionContainer = document.getElementById('question-container');
@@ -1612,12 +1675,12 @@ displayQuestion = function() {
   originalDisplayQuestion.apply(this, arguments);
 };
 
-// Enhanced topic selection with MathJax support
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
   
   if (!topicsGrid) {
     console.error('Topics grid element not found');
+    hideMathJaxOverlay(); // Ensure overlay is hidden on error
     return;
   }
   
@@ -1637,6 +1700,7 @@ function initializeTopicSelection() {
         `;
         topicsGrid.innerHTML = '';
         topicsGrid.appendChild(noResults);
+        hideMathJaxOverlay(); // Hide overlay for no results
         return;
       }
       
@@ -1662,11 +1726,15 @@ function initializeTopicSelection() {
         }
       });
       
-      renderMathJaxInTopics();
+      // Render MathJax and hide overlay when complete
+      safeRenderMathJax().then(() => {
+        console.log('Topic selection MathJax complete');
+      });
       
     } catch (error) {
       console.error('Error initializing topic selection:', error);
       topicsGrid.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Error loading topics. Please refresh the page.</div>';
+      hideMathJaxOverlay(); // Hide overlay on error
     }
   }, 100);
 }
@@ -1788,68 +1856,68 @@ function createTopicElement(topicId) {
 }
 
 function renderMathJax() {
-  if (!window.MathJax) {
-    console.warn('MathJax not available');
+  if (!window.MathJax || !mathJaxReady) {
+    console.log('MathJax not available, skipping rendering');
     return Promise.resolve();
   }
   
   return new Promise((resolve) => {
-    setTimeout(() => {
-      const elements = [
-        document.getElementById('question-text'),
-        document.getElementById('options'),
-        document.getElementById('correct-answer-text'),
-        document.getElementById('feedback-explanation')
-      ].filter(el => el && el.innerHTML);
+    const renderWithRetry = (retryCount = 0) => {
+      const maxRetries = 2;
       
-      const topicDescriptions = document.querySelectorAll('.topic-description');
-      const topicTitles = document.querySelectorAll('.topic-title');
-      
-      const allMathElements = [...elements];
-      
-      topicDescriptions.forEach(desc => {
-        if (desc.innerHTML && containsMath(desc.innerHTML)) {
-          allMathElements.push(desc);
+      try {
+        const elements = [
+          document.getElementById('question-text'),
+          document.getElementById('options'),
+          document.getElementById('correct-answer-text'),
+          document.getElementById('feedback-explanation')
+        ].filter(el => el && el.innerHTML);
+        
+        const topicDescriptions = document.querySelectorAll('.topic-description');
+        const topicTitles = document.querySelectorAll('.topic-title');
+        
+        const allMathElements = [...elements, ...topicDescriptions, ...topicTitles];
+        
+        if (allMathElements.length === 0) {
+          resolve();
+          return;
         }
-      });
-      
-      topicTitles.forEach(title => {
-        if (title.innerHTML && containsMath(title.innerHTML)) {
-          allMathElements.push(title);
+        
+        console.log(`Rendering MathJax for ${allMathElements.length} elements, attempt ${retryCount + 1}`);
+        
+        if (window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise(allMathElements)
+            .then(() => {
+              console.log('MathJax rendering complete');
+              resolve();
+            })
+            .catch(error => {
+              console.warn(`MathJax typeset error (attempt ${retryCount + 1}):`, error);
+              if (retryCount < maxRetries) {
+                console.log(`Retrying MathJax rendering... (${retryCount + 1}/${maxRetries})`);
+                setTimeout(() => renderWithRetry(retryCount + 1), 500);
+              } else {
+                console.warn('Max retries reached, proceeding without MathJax');
+                resolve();
+              }
+            });
+        } else if (window.MathJax.typeset) {
+          window.MathJax.typeset(allMathElements);
+          resolve();
+        } else {
+          resolve();
         }
-      });
-      
-      if (allMathElements.length === 0) {
-        resolve();
-        return;
-      }
-      
-      console.log(`Rendering MathJax for ${allMathElements.length} elements`);
-      
-      if (window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise(allMathElements)
-          .then(() => {
-            console.log('MathJax rendering complete for all elements');
-            resolve();
-          })
-          .catch(error => {
-            console.warn('MathJax typeset error:', error);
-            if (window.MathJax.typeset) {
-              window.MathJax.typeset(allMathElements);
-            }
-            resolve();
-          });
-      } else if (window.MathJax.typeset) {
-        window.MathJax.typeset(allMathElements);
-        resolve();
-      } else {
+      } catch (error) {
+        console.error('Unexpected error in renderMathJax:', error);
         resolve();
       }
-    }, 100);
+    };
+    
+    // Small delay to ensure DOM is updated
+    setTimeout(() => renderWithRetry(), 100);
   });
 }
 
-// Enhanced search with MathJax support
 const originalSetupSearch = setupSearch;
 setupSearch = function() {
   originalSetupSearch.apply(this, arguments);
@@ -1875,7 +1943,6 @@ setupSearch = function() {
   }
 };
 
-// Enhanced dropdown with MathJax support
 const originalInitializeCustomDropdown = initializeCustomDropdown;
 initializeCustomDropdown = function() {
   originalInitializeCustomDropdown.apply(this, arguments);
@@ -1898,3 +1965,298 @@ initializeCustomDropdown = function() {
     };
   });
 };
+
+function createLoadingOverlay() {
+  const existingOverlay = document.querySelector('.loading-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.innerHTML = `
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <div>Loading MathJax...</div>
+    <div class="loading-progress" style="margin-top: 10px; font-size: 0.8em;">
+      If this takes too long, <button onclick="skipMathJax()" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">skip math rendering</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  
+  // Auto-hide timeout as backup
+  overlay.autoHideTimeout = setTimeout(() => {
+    if (document.body.contains(overlay)) {
+      console.log('Auto-hiding MathJax overlay after timeout');
+      hideMathJaxOverlay();
+    }
+  }, 10000); // 10 second timeout
+  
+  return overlay;
+}
+
+function hideMathJaxOverlay() {
+  const overlay = document.querySelector('.loading-overlay');
+  if (overlay) {
+    // Clear the auto-hide timeout if it exists
+    if (overlay.autoHideTimeout) {
+      clearTimeout(overlay.autoHideTimeout);
+    }
+    
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        overlay.remove();
+      }
+    }, 300);
+  }
+}
+
+function skipMathJax() {
+  console.log('User skipped MathJax loading');
+  mathJaxReady = true;
+  hideMathJaxOverlay();
+  initializeApp();
+}
+
+function displayMathFallback(element) {
+  if (!element || !element.innerHTML) return;
+  
+  let content = element.innerHTML;
+  
+  const replacements = [
+  // Remove LaTeX delimiters
+  [/\\\(/g, '('],
+  [/\\\)/g, ')'],
+  [/\\\[/g, ''],
+  [/\\\]/g, ''],
+  
+  // Remove dollar sign delimiters
+  [/\$\$(.*?)\$\$/g, '$1'],
+  [/\$(.*?)\$/g, '$1'],
+  
+  // Fractions
+  [/\\frac\{(.*?)\}\{(.*?)\}/g, '($1)/($2)'],
+  [/\\dfrac\{(.*?)\}\{(.*?)\}/g, '($1)/($2)'],
+  [/\\tfrac\{(.*?)\}\{(.*?)\}/g, '($1)/($2)'],
+  
+  // Roots
+  [/\\sqrt\{(.*?)\}/g, '√($1)'],
+  [/\\sqrt\[(.*?)\]\{(.*?)\}/g, '√[$1]($2)'],
+  
+  // Greek letters
+  [/\\pi/g, 'π'],
+  [/\\theta/g, 'θ'],
+  [/\\alpha/g, 'α'],
+  [/\\beta/g, 'β'],
+  [/\\gamma/g, 'γ'],
+  [/\\Delta/g, 'Δ'],
+  [/\\delta/g, 'δ'],
+  [/\\epsilon/g, 'ε'],
+  [/\\zeta/g, 'ζ'],
+  [/\\eta/g, 'η'],
+  [/\\iota/g, 'ι'],
+  [/\\kappa/g, 'κ'],
+  [/\\lambda/g, 'λ'],
+  [/\\mu/g, 'μ'],
+  [/\\nu/g, 'ν'],
+  [/\\xi/g, 'ξ'],
+  [/\\rho/g, 'ρ'],
+  [/\\sigma/g, 'σ'],
+  [/\\tau/g, 'τ'],
+  [/\\phi/g, 'φ'],
+  [/\\chi/g, 'χ'],
+  [/\\psi/g, 'ψ'],
+  [/\\omega/g, 'ω'],
+  
+  // Math operators
+  [/\\times/g, '×'],
+  [/\\div/g, '÷'],
+  [/\\cdot/g, '·'],
+  [/\\pm/g, '±'],
+  [/\\mp/g, '∓'],
+  
+  // Relations
+  [/\\leq/g, '≤'],
+  [/\\geq/g, '≥'],
+  [/\\neq/g, '≠'],
+  [/\\approx/g, '≈'],
+  [/\\equiv/g, '≡'],
+  [/\\propto/g, '∝'],
+  [/\\sim/g, '∼'],
+  
+  // Sets
+  [/\\in/g, '∈'],
+  [/\\notin/g, '∉'],
+  [/\\subset/g, '⊂'],
+  [/\\subseteq/g, '⊆'],
+  [/\\supset/g, '⊃'],
+  [/\\supseteq/g, '⊇'],
+  [/\\cup/g, '∪'],
+  [/\\cap/g, '∩'],
+  [/\\emptyset/g, '∅'],
+  
+  // Arrows
+  [/\\to/g, '→'],
+  [/\\rightarrow/g, '→'],
+  [/\\leftarrow/g, '←'],
+  [/\\Rightarrow/g, '⇒'],
+  [/\\Leftarrow/g, '⇐'],
+  [/\\leftrightarrow/g, '↔'],
+  
+  // Calculus
+  [/\\int/g, '∫'],
+  [/\\sum/g, '∑'],
+  [/\\prod/g, '∏'],
+  [/\\lim/g, 'lim'],
+  [/\\partial/g, '∂'],
+  [/\\nabla/g, '∇'],
+  
+  // Logic
+  [/\\forall/g, '∀'],
+  [/\\exists/g, '∃'],
+  [/\\land/g, '∧'],
+  [/\\lor/g, '∨'],
+  [/\\neg/g, '¬'],
+  [/\\implies/g, '⇒'],
+  
+  // Other symbols
+  [/\\infty/g, '∞'],
+  [/\\angle/g, '∠'],
+  [/\\triangle/g, '△'],
+  [/\\circ/g, '°'],
+  [/\\degree/g, '°'],
+  [/\\prime/g, "'"],
+  [/\\ell/g, 'ℓ'],
+  
+  // Text formatting
+  [/\\text\{(.*?)\}/g, '$1'],
+  [/\\textbf\{(.*?)\}/g, '<strong>$1</strong>'],
+  [/\\textit\{(.*?)\}/g, '<em>$1</em>'],
+  
+  // Spaces
+  [/\\,/g, ' '],
+  [/\\;/g, '  '],
+  [/\\quad/g, '    '],
+  [/\\qquad/g, '        '],
+  
+  // Remove other LaTeX commands but keep their content
+  [/\\[a-zA-Z]+\{(.*?)\}/g, '$1'],
+  
+  // Remove standalone LaTeX commands without content
+  [/\\[a-zA-Z]+/g, ''],
+  
+  // Clean up extra spaces
+  [/\s+/g, ' '],
+  [/\(\s+/g, '('],
+  [/\s+\)/g, ')']
+];
+  
+  try {
+    // Process multiple times to handle nested commands
+    let previousContent;
+    let iterations = 0;
+    const maxIterations = 5;
+    
+    do {
+      previousContent = content;
+      iterations++;
+      
+      replacements.forEach(([pattern, replacement]) => {
+        content = content.replace(pattern, replacement);
+      });
+      
+      // Stop if no more changes or too many iterations
+      if (content === previousContent || iterations >= maxIterations) {
+        break;
+      }
+    } while (true);
+    
+    // Final cleanup
+    content = content
+      .replace(/\s+/g, ' ')
+      .replace(/\(\s+/g, '(')
+      .replace(/\s+\)/g, ')')
+      .trim();
+    
+    element.innerHTML = content;
+    
+  } catch (error) {
+    console.warn('Error applying MathJax fallback:', error);
+    // Basic cleanup as last resort
+    element.innerHTML = element.innerHTML
+      .replace(/\\[a-zA-Z]+\{.*?\}/g, '')
+      .replace(/\\[a-zA-Z]+/g, '')
+      .replace(/\\\(/g, '(')
+      .replace(/\\\)/g, ')')
+      .replace(/\\\[/g, '')
+      .replace(/\\\]/g, '')
+      .replace(/\$\$(.*?)\$\$/g, '$1')
+      .replace(/\$(.*?)\$/g, '$1');
+  }
+}
+
+function safeRenderMathJax() {
+  const overlay = document.querySelector('.loading-overlay');
+  
+  return renderMathJax()
+    .then(() => {
+      console.log('MathJax rendering completed successfully');
+      hideMathJaxOverlay();
+    })
+    .catch(error => {
+      console.error('MathJax rendering failed, using fallback:', error);
+      
+      // Apply fallback to all math elements
+      const mathElements = [
+        document.getElementById('question-text'),
+        document.getElementById('options'),
+        document.getElementById('correct-answer-text'),
+        document.getElementById('feedback-explanation')
+      ].filter(el => el);
+      
+      mathElements.forEach(displayMathFallback);
+      
+      const topicElements = document.querySelectorAll('.topic-description, .topic-title');
+      topicElements.forEach(displayMathFallback);
+      
+      // Show fallback warning but still hide overlay
+      showFallbackWarning();
+      hideMathJaxOverlay();
+    });
+}
+
+function showFallbackWarning() {
+  // Remove existing warning
+  const existingWarning = document.querySelector('.mathjax-fallback-warning');
+  if (existingWarning) {
+    existingWarning.remove();
+  }
+  
+  const warning = document.createElement('div');
+  warning.className = 'mathjax-fallback-warning';
+  warning.innerHTML = `
+    <i class="fas fa-exclamation-triangle"></i>
+    Math rendering simplified. Some equations may not display perfectly.
+  `;
+  
+  // Insert at the top of the main content
+  const mainContent = document.querySelector('.container') || document.body;
+  mainContent.insertBefore(warning, mainContent.firstChild);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (document.body.contains(warning)) {
+      warning.style.opacity = '0';
+      warning.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => {
+        if (document.body.contains(warning)) {
+          warning.remove();
+        }
+      }, 500);
+    }
+  }, 5000);
+}
