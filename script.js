@@ -1317,7 +1317,6 @@ function printResults() {
   }, 100);
 }
 
-// MathJax Integration Functions
 function initializeWhenReady() {
   if (mathJaxReady && domContentLoaded && !initializationPending) {
     initializationPending = true;
@@ -1592,65 +1591,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-const loadingStyles = `
-#topic-selection,
-#question-container {
-  visibility: hidden;
-}
 
-.mathjax-loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  font-size: var(--font-size-lg);
-  color: var(--color-text-light);
-}
-
-.loading-overlay.hidden {
-  display: none;
-}
-
-.loading-spinner {
-  margin-bottom: var(--spacing-lg);
-  font-size: 2rem;
-  color: var(--color-primary);
-}
-
-.topic-description mjx-container,
-.topic-title mjx-container {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.topic-description mjx-container {
-  font-size: 0.9em;
-}
-
-.topic-item {
-  position: relative;
-}
-
-.topic-content mjx-container {
-  line-height: 1.3;
-}
-`;
-
-const loadingStyleSheet = document.createElement('style');
-loadingStyleSheet.textContent = loadingStyles;
-document.head.appendChild(loadingStyleSheet);
 
 function createLoadingOverlay() {
   const overlay = document.createElement('div');
@@ -1970,7 +1911,7 @@ function createLoadingOverlay() {
     </div>
     <div>Loading MathJax...</div>
     <div class="loading-progress" style="margin-top: 10px; font-size: 0.8em;">
-      If this takes too long, <button onclick="skipMathJax()" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">skip math rendering</button>
+      If this takes too long, <button onclick="skipMathJax()" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;"></button>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -2105,14 +2046,557 @@ function containsLaTeX(text) {
 function skipMathJax() {
   console.log('User skipped MathJax loading');
   mathJaxReady = true;
-  window.mathJaxSkipped = true; // Global flag
+  window.mathJaxSkipped = true;
   
-  // Immediately apply fallback to all visible math elements
-  applyMathFallbackToAll();
-  
+  // Force hide overlay immediately
   hideMathJaxOverlay();
+  
+  // Apply fallback to EVERYTHING right now
+  forceMathFallback();
+  
+  // Re-initialize the app
   initializeApp();
 }
+
+function forceMathFallback() {
+  console.log('FORCE applying math fallback to all elements');
+  
+  // Apply to all question-related elements
+  const questionText = document.getElementById('question-text');
+  const options = document.getElementById('options');
+  const correctAnswer = document.getElementById('correct-answer-text');
+  const feedback = document.getElementById('feedback-explanation');
+  
+  if (questionText) displayMathFallback(questionText);
+  if (options) {
+    const optionElements = options.querySelectorAll('.option');
+    optionElements.forEach(displayMathFallback);
+  }
+  if (correctAnswer) displayMathFallback(correctAnswer);
+  if (feedback) displayMathFallback(feedback);
+  
+  // Apply to all topic elements
+  const topicDescriptions = document.querySelectorAll('.topic-description');
+  const topicTitles = document.querySelectorAll('.topic-title');
+  
+  topicDescriptions.forEach(displayMathFallback);
+  topicTitles.forEach(displayMathFallback);
+  
+  console.log(`Force applied fallback to ${topicDescriptions.length + topicTitles.length} topic elements`);
+}
+
+function displayMathFallback(element) {
+  if (!element || !element.innerHTML) return;
+  
+  let content = element.innerHTML;
+  
+  console.log('Processing element with content:', content.substring(0, 100));
+  
+  // More comprehensive replacements
+  const replacements = [
+    // Remove LaTeX delimiters first
+    [/\\\(/g, '('],
+    [/\\\)/g, ')'],
+    [/\\\[/g, ''],
+    [/\\\]/g, ''],
+    [/\$\$(.*?)\$\$/g, '$1'],
+    [/\$(.*?)\$/g, '$1'],
+    
+    // Common fractions
+    [/\\frac\{(.*?)\}\{(.*?)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>'],
+    [/\\dfrac\{(.*?)\}\{(.*?)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>'],
+    [/\\tfrac\{(.*?)\}\{(.*?)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>'],
+    
+    // Roots
+    [/\\sqrt\{(.*?)\}/g, '√($1)'],
+    [/\\sqrt\[(.*?)\]\{(.*?)\}/g, '√<sup>$1</sup>($2)'],
+    
+    // Greek letters - comprehensive list
+    [/\\alpha/g, 'α'],
+    [/\\beta/g, 'β'],
+    [/\\gamma/g, 'γ'],
+    [/\\Gamma/g, 'Γ'],
+    [/\\delta/g, 'δ'],
+    [/\\Delta/g, 'Δ'],
+    [/\\epsilon/g, 'ε'],
+    [/\\varepsilon/g, 'ε'],
+    [/\\zeta/g, 'ζ'],
+    [/\\eta/g, 'η'],
+    [/\\theta/g, 'θ'],
+    [/\\Theta/g, 'Θ'],
+    [/\\iota/g, 'ι'],
+    [/\\kappa/g, 'κ'],
+    [/\\lambda/g, 'λ'],
+    [/\\Lambda/g, 'Λ'],
+    [/\\mu/g, 'μ'],
+    [/\\nu/g, 'ν'],
+    [/\\xi/g, 'ξ'],
+    [/\\Xi/g, 'Ξ'],
+    [/\\pi/g, 'π'],
+    [/\\Pi/g, 'Π'],
+    [/\\rho/g, 'ρ'],
+    [/\\sigma/g, 'σ'],
+    [/\\Sigma/g, 'Σ'],
+    [/\\tau/g, 'τ'],
+    [/\\upsilon/g, 'υ'],
+    [/\\phi/g, 'φ'],
+    [/\\Phi/g, 'Φ'],
+    [/\\chi/g, 'χ'],
+    [/\\psi/g, 'ψ'],
+    [/\\Psi/g, 'Ψ'],
+    [/\\omega/g, 'ω'],
+    [/\\Omega/g, 'Ω'],
+    
+    // Math operators
+    [/\\times/g, '×'],
+    [/\\div/g, '÷'],
+    [/\\cdot/g, '·'],
+    [/\\pm/g, '±'],
+    [/\\mp/g, '∓'],
+    [/\\otimes/g, '⊗'],
+    [/\\oplus/g, '⊕'],
+    [/\\odot/g, '⊙'],
+    
+    // Relations
+    [/\\leq/g, '≤'],
+    [/\\geq/g, '≥'],
+    [/\\neq/g, '≠'],
+    [/\\approx/g, '≈'],
+    [/\\equiv/g, '≡'],
+    [/\\propto/g, '∝'],
+    [/\\sim/g, '∼'],
+    [/\\cong/g, '≅'],
+    [/\\simeq/g, '≃'],
+    [/\\perp/g, '⊥'],
+    [/\\parallel/g, '∥'],
+    
+    // Sets
+    [/\\in/g, '∈'],
+    [/\\notin/g, '∉'],
+    [/\\subset/g, '⊂'],
+    [/\\subseteq/g, '⊆'],
+    [/\\supset/g, '⊃'],
+    [/\\supseteq/g, '⊇'],
+    [/\\cup/g, '∪'],
+    [/\\cap/g, '∩'],
+    [/\\emptyset/g, '∅'],
+    [/\\infty/g, '∞'],
+    [/\\forall/g, '∀'],
+    [/\\exists/g, '∃'],
+    
+    // Arrows
+    [/\\to/g, '→'],
+    [/\\rightarrow/g, '→'],
+    [/\\leftarrow/g, '←'],
+    [/\\Rightarrow/g, '⇒'],
+    [/\\Leftarrow/g, '⇐'],
+    [/\\leftrightarrow/g, '↔'],
+    [/\\Leftrightarrow/g, '⇔'],
+    [/\\mapsto/g, '↦'],
+    
+    // Calculus
+    [/\\int/g, '∫'],
+    [/\\iint/g, '∬'],
+    [/\\iiint/g, '∭'],
+    [/\\oint/g, '∮'],
+    [/\\sum/g, '∑'],
+    [/\\prod/g, '∏'],
+    [/\\lim/g, 'lim'],
+    [/\\partial/g, '∂'],
+    [/\\nabla/g, '∇'],
+    [/\\prime/g, '′'],
+    [/\\ell/g, 'ℓ'],
+    
+    // Logic
+    [/\\land/g, '∧'],
+    [/\\lor/g, '∨'],
+    [/\\neg/g, '¬'],
+    [/\\implies/g, '⇒'],
+    [/\\iff/g, '⇔'],
+    
+    // Other symbols
+    [/\\angle/g, '∠'],
+    [/\\triangle/g, '△'],
+    [/\\circ/g, '°'],
+    [/\\degree/g, '°'],
+    [/\\ast/g, '*'],
+    [/\\star/g, '★'],
+    [/\\bullet/g, '•'],
+    [/\\dagger/g, '†'],
+    [/\\ddagger/g, '‡'],
+    
+    // Text formatting - keep the content, remove the commands
+    [/\\text\{(.*?)\}/g, '$1'],
+    [/\\textbf\{(.*?)\}/g, '<strong>$1</strong>'],
+    [/\\textit\{(.*?)\}/g, '<em>$1</em>'],
+    [/\\texttt\{(.*?)\}/g, '<code>$1</code>'],
+    
+    // Spaces
+    [/\\,/g, ' '],
+    [/\\;/g, '  '],
+    [/\\:/g, ' '],
+    [/\\!/g, ''],
+    [/\\quad/g, '    '],
+    [/\\qquad/g, '        '],
+    
+    // Remove common LaTeX commands but keep their content
+    [/\\mathrm\{(.*?)\}/g, '$1'],
+    [/\\mathbf\{(.*?)\}/g, '<strong>$1</strong>'],
+    [/\\mathit\{(.*?)\}/g, '<em>$1</em>'],
+    [/\\mathcal\{(.*?)\}/g, '$1'],
+    [/\\mathbb\{(.*?)\}/g, '$1'],
+    [/\\mathfrak\{(.*?)\}/g, '$1'],
+    [/\\mathscr\{(.*?)\}/g, '$1'],
+    
+    // Superscripts and subscripts
+    [/\\^(\w)/g, '<sup>$1</sup>'],
+    [/\_(\w)/g, '<sub>$1</sub>'],
+    [/\\^\{(.*?)\}/g, '<sup>$1</sup>'],
+    [/\\_\{(.*?)\}/g, '<sub>$1</sub>'],
+    
+    // Remove any remaining LaTeX commands with content
+    [/\\[a-zA-Z]+\{(.*?)\}/g, '$1'],
+    
+    // Remove standalone LaTeX commands without content
+    [/\\[a-zA-Z]+/g, ''],
+    
+    // Clean up extra spaces and brackets
+    [/\s+/g, ' '],
+    [/\(\s+/g, '('],
+    [/\s+\)/g, ')'],
+    [/\[\s+/g, '['],
+    [/\s+\]/g, ']'],
+    [/\{\s+/g, '{'],
+    [/\s+\}/g, '}']
+  ];
+  
+  try {
+    // Process multiple times to handle nested commands
+    let previousContent;
+    let iterations = 0;
+    const maxIterations = 10; // Increased for more complex expressions
+    
+    do {
+      previousContent = content;
+      iterations++;
+      
+      replacements.forEach(([pattern, replacement]) => {
+        try {
+          content = content.replace(pattern, replacement);
+        } catch (e) {
+          console.warn('Replacement error:', e, 'for pattern:', pattern);
+        }
+      });
+      
+      // Stop if no more changes or too many iterations
+      if (content === previousContent || iterations >= maxIterations) {
+        break;
+      }
+    } while (true);
+    
+    // Final cleanup of any remaining LaTeX artifacts
+    content = content
+      .replace(/\\[a-zA-Z]+\{.*?\}/g, '') // Remove any remaining command{content}
+      .replace(/\\[a-zA-Z]+/g, '') // Remove any remaining standalone commands
+      .replace(/\{/g, '')
+      .replace(/\}/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log('Converted content:', content.substring(0, 100));
+    element.innerHTML = content;
+    
+  } catch (error) {
+    console.error('Error in displayMathFallback:', error);
+    // Last resort: remove all backslashes and braces
+    element.innerHTML = element.innerHTML
+      .replace(/\\[a-zA-Z]+\{.*?\}/g, '')
+      .replace(/\\[a-zA-Z]+/g, '')
+      .replace(/\\\(/g, '(')
+      .replace(/\\\)/g, ')')
+      .replace(/\\\[/g, '')
+      .replace(/\\\]/g, '')
+      .replace(/\$\$(.*?)\$\$/g, '$1')
+      .replace(/\$(.*?)\$/g, '$1')
+      .replace(/\{/g, '')
+      .replace(/\}/g, '');
+  }
+}
+
+function createLoadingOverlay() {
+  const existingOverlay = document.querySelector('.loading-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.innerHTML = `
+    <div class="loading-content" style="
+      background: var(--bg-primary);
+      padding: var(--spacing-3xl);
+      border-radius: var(--border-radius-2xl);
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid var(--border-color);
+    ">
+      <div class="loading-spinner" style="
+        margin-bottom: var(--spacing-xl);
+        font-size: 2.5rem;
+        color: var(--color-primary);
+      ">
+        <i class="fas fa-spinner fa-spin"></i>
+      </div>
+      <h3 style="
+        color: var(--color-text);
+        margin-bottom: var(--spacing-md);
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+      ">Loading Math Rendering</h3>
+      <p style="
+        color: var(--color-text-light);
+        margin-bottom: var(--spacing-xl);
+        line-height: 1.5;
+      ">Preparing mathematical equations and symbols...</p>
+      
+      <div style="
+        margin-top: var(--spacing-xl);
+        padding: var(--spacing-lg);
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
+        text-align: center;
+        border: 1px solid var(--border-color);
+      ">
+        <p style="
+          margin-bottom: var(--spacing-md);
+          font-size: var(--font-size-sm);
+          color: var(--color-text-light);
+        ">Taking too long?</p>
+        <button onclick="skipMathJax()" style="
+          background: var(--color-danger);
+          color: var(--color-white);
+          border: none;
+          padding: var(--spacing-md) var(--spacing-xl);
+          border-radius: var(--border-radius-full);
+          cursor: pointer;
+          font-size: var(--font-size-base);
+          font-weight: 600;
+          transition: all var(--transition-fast);
+          box-shadow: var(--shadow-sm);
+        " onmouseover="this.style.background='var(--color-danger-dark)'" 
+           onmouseout="this.style.background='var(--color-danger)'">
+          <i class="fas fa-forward" style="margin-right: var(--spacing-sm);"></i>
+        </button>
+        <p style="
+          margin-top: var(--spacing-md);
+          font-size: var(--font-size-xs);
+          color: var(--color-text-lighter);
+        ">
+          Equations will show as plain text
+        </p>
+      </div>
+    </div>
+  `;
+  
+  // Add overlay background styles
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 41, 59, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: var(--font-family);
+    backdrop-filter: blur(4px);
+  `;
+  
+  document.body.appendChild(overlay);
+  
+  // Auto-hide timeout as backup
+  overlay.autoHideTimeout = setTimeout(() => {
+    if (document.body.contains(overlay)) {
+      console.log('Auto-hiding MathJax overlay after timeout');
+      hideMathJaxOverlay();
+    }
+  }, 15000);
+  
+  return overlay;
+}
+
+function hideMathJaxOverlay() {
+  const overlay = document.querySelector('.loading-overlay');
+  if (overlay) {
+    // Clear the auto-hide timeout if it exists
+    if (overlay.autoHideTimeout) {
+      clearTimeout(overlay.autoHideTimeout);
+    }
+    
+    // Add fade-out animation
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity var(--transition-slow) ease';
+    
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        overlay.remove();
+      }
+    }, 350);
+  }
+}
+
+function showFallbackWarning() {
+  // Remove existing warning
+  const existingWarning = document.querySelector('.mathjax-fallback-warning');
+  if (existingWarning) {
+    existingWarning.remove();
+  }
+  
+  const warning = document.createElement('div');
+  warning.className = 'mathjax-fallback-warning';
+  warning.innerHTML = `
+    <i class="fas fa-exclamation-triangle" style="color: var(--color-warning);"></i>
+    Math rendering simplified. Some equations may not display perfectly.
+  `;
+  
+  // Style the warning
+  warning.style.cssText = `
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid var(--color-warning);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-sm);
+  `;
+  
+  // Insert at the top of the main content
+  const mainContent = document.querySelector('.container') || document.body;
+  const firstChild = mainContent.firstChild;
+  if (firstChild) {
+    mainContent.insertBefore(warning, firstChild);
+  } else {
+    mainContent.appendChild(warning);
+  }
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (document.body.contains(warning)) {
+      warning.style.opacity = '0';
+      warning.style.transition = 'opacity var(--transition) ease';
+      setTimeout(() => {
+        if (document.body.contains(warning)) {
+          warning.remove();
+        }
+      }, 300);
+    }
+  }, 5000);
+}
+
+const loadingStyles = `
+#topic-selection,
+#question-container {
+  visibility: hidden;
+}
+
+.mathjax-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 41, 59, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: var(--font-family);
+  backdrop-filter: blur(4px);
+  transition: opacity var(--transition-slow) ease;
+}
+
+.loading-content {
+  background: var(--bg-primary);
+  padding: var(--spacing-3xl);
+  border-radius: var(--border-radius-2xl);
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid var(--border-color);
+}
+
+.loading-spinner {
+  margin-bottom: var(--spacing-xl);
+  font-size: 2.5rem;
+  color: var(--color-primary);
+}
+
+.topic-description mjx-container,
+.topic-title mjx-container {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.topic-description mjx-container {
+  font-size: 0.9em;
+}
+
+.topic-item {
+  position: relative;
+}
+
+.topic-content mjx-container {
+  line-height: 1.3;
+}
+
+.mathjax-fallback-warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--color-warning);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-shadow: var(--shadow-sm);
+  transition: opacity var(--transition) ease;
+}
+`;
+
+// Update the style sheet
+const loadingStyleSheet = document.createElement('style');
+loadingStyleSheet.textContent = loadingStyles;
+document.head.appendChild(loadingStyleSheet);
+
+window.onMathJaxTimeout = function() {
+  console.log('MathJax timeout - forcing fallback');
+  skipMathJax();
+};
+
+setTimeout(() => {
+  if (!mathJaxReady && !window.mathJaxSkipped) {
+    console.log('MathJax loading timeout reached');
+    window.onMathJaxTimeout();
+  }
+}, 10000); 
 
 const originalDisplayQuestion = displayQuestion;
 displayQuestion = function() {
