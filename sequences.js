@@ -72,7 +72,7 @@ function generateArithmeticNthTerm() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(T_n = a + (n-1)d\\)</div>
@@ -111,7 +111,7 @@ function generateArithmeticSum() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(S_n = \\frac{n}{2}(a + l)\\) or \\(S_n = \\frac{n}{2}(2a + (n-1)d)\\)</div>
@@ -150,7 +150,7 @@ function generateArithmeticMissingTerm() {
   
   return {
     question: `Find the missing term in the arithmetic sequence: \\(${sequence.join(', ')}, ...\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Method:</strong> Find the common difference and use it to find the missing term.</div>
@@ -179,7 +179,7 @@ function generateArithmeticGivenSum() {
   
   return {
     question: `How many terms of the sequence \\(${a}, ${a+d}, ${a+2*d}, ...\\) are needed to make a sum of ${sum}?`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(S_n = \\frac{n}{2}(2a + (n-1)d)\\)</div>
@@ -219,7 +219,7 @@ function generateGeometricNthTerm() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(T_n = ar^{n-1}\\)</div>
@@ -256,7 +256,7 @@ function generateGeometricSum() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(S_n = \\frac{a(r^n - 1)}{r - 1}\\) for r > 1</div>
@@ -296,7 +296,7 @@ function generateGeometricInfiniteSum() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt.toFixed(2)}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(S_∞ = \\frac{a}{1 - r}\\) for |r| < 1</div>
@@ -330,7 +330,7 @@ function generateGeometricMissingTerm() {
   
   return {
     question: `Find the missing term in the geometric sequence: \\(${sequence.join(', ')}, ...\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Method:</strong> Find the common ratio and use it to find the missing term.</div>
@@ -347,8 +347,6 @@ function generateGeometricMissingTerm() {
   };
 }
 
-// FACTORIAL QUESTIONS
-
 function generateFactorialSimple() {
   const n = 4 + Math.floor(Math.random() * 6);
   const factorial = Array.from({ length: n }, (_, i) => i + 1).reduce((a, b) => a * b, 1);
@@ -364,7 +362,7 @@ function generateFactorialSimple() {
   
   return {
     question: templates[Math.floor(Math.random() * templates.length)],
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Definition:</strong> \\(n! = n × (n-1) × (n-2) × ... × 2 × 1\\)</div>
@@ -392,7 +390,7 @@ function generateFactorialExpression() {
   
   return {
     question: `Simplify: \\(\\frac{${n}!}{${k}!}\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Method:</strong> Expand and cancel common factors</div>
@@ -420,7 +418,7 @@ function generateSquaresSum() {
   
   return {
     question: `Find the sum: \\(1^2 + 2^2 + 3^2 + ... + ${n}^2\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(\\sum_{i=1}^{n} i^2 = \\frac{n(n+1)(2n+1)}{6}\\)</div>
@@ -444,7 +442,7 @@ function generateCubesSum() {
   
   return {
     question: `Find the sum: \\(1^3 + 2^3 + 3^3 + ... + ${n}^3\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Formula:</strong> \\(\\sum_{i=1}^{n} i^3 = [\\frac{n(n+1)}{2}]^2\\)</div>
@@ -473,7 +471,7 @@ function generateFibonacciTerm() {
   
   return {
     question: `Find the ${n}th term of the Fibonacci sequence: \\(1, 1, 2, 3, 5, 8, ...\\)`,
-    options: options.map(opt => `\\(${opt}\\)`),
+    options: options.map(opt => `\(${opt}\)`),
     correct: correctIndex,
     explanation: `
 <div><strong>Rule:</strong> Each term is the sum of the two preceding terms</div>
@@ -486,8 +484,6 @@ ${n > 8 ? '<div>...</div>' : ''}
     `.trim()
   };
 }
-
-// HELPER FUNCTIONS
 
 function generateOptionsWithIndex(correctValue) {
   const offsets = [-Math.floor(correctValue * 0.2), -Math.floor(correctValue * 0.1),
