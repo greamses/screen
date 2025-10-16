@@ -118,36 +118,6 @@ function getFilteredAndSortedTopics() {
   return filteredTopics;
 }
 
-function createTopicElement(topicId) {
-  const topic = getTopicInf(topicId); // Changed from getTopicInfo()
-  if (!topic) return null;
-  
-  const category = getCategoryForTop(topicId); // Changed from getCategoryForTopic()
-  
-  const topicItem = document.createElement('div');
-  topicItem.className = 'topic-item';
-  topicItem.setAttribute('data-category', category);
-  
-  if (selectedTopics.has(topicId)) {
-    topicItem.classList.add('selected');
-  }
-  topicItem.onclick = () => toggleTopic(topicId, topicItem);
-  
-  const highlightedTitle = highlightText(topic.title, searchTerm);
-  const highlightedDescription = highlightText(topic.description, searchTerm);
-  
-  topicItem.innerHTML = `
-    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
-    <div class="topic-content">
-      <span class="topic-title">${highlightedTitle}</span>
-      <span class="topic-description">${highlightedDescription}</span>
-      <span class="topic-category" data-category="${category}">${category}</span>
-    </div>
-  `;
-  
-  return topicItem;
-}
-
 function startQuiz() {
   if (selectedTopics.size === 0) {
     alert('Please select at least one topic');
@@ -1076,58 +1046,6 @@ function formatTime(seconds) {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function configureMathJax() {
-  if (window.MathJax) {
-    MathJax = {
-      tex: {
-        inlineMath: [
-          ['\\(', '\\)']
-        ],
-        displayMath: [
-          ['\\[', '\\]']
-        ],
-        processEscapes: true,
-        processEnvironments: true
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-        renderActions: {
-          // Add MathJax to the page
-          addMenu: [0, '', '']
-        }
-      }
-    };
-  }
-}
-
-function highlightText(text, searchTerm) {
-  if (!searchTerm || !text) return text;
-  
-  try {
-    const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$/g;
-    const mathParts = [];
-    let mathIndex = 0;
-    
-    const textWithPlaceholders = text.replace(mathRegex, (match) => {
-      const placeholder = `__MATH_${mathIndex}__`;
-      mathParts.push(match);
-      mathIndex++;
-      return placeholder;
-    });
-    
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
-    
-    const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
-      return mathParts[parseInt(index)] || match;
-    });
-    
-    return finalText;
-  } catch (e) {
-    return text;
-  }
-}
-
 function updateQuestionCount() {
   const questionCountInput = document.getElementById('question-count');
   if (questionCountInput) {
@@ -1486,6 +1404,321 @@ function printResults() {
   }, 100);
 }
 
+
+let mathJaxReady = false;
+let domContentLoaded = false;
+let initializationPending = false;
+
+function initializeWhenReady() {
+  if (mathJaxReady && domContentLoaded && !initializationPending) {
+    initializationPending = true;
+    initializeApp();
+  }
+}
+
+function configureMathJax() {
+  if (window.MathJax) {
+    window.MathJax = {
+      startup: {
+        pageReady: () => {
+          console.log('MathJax is ready');
+          mathJaxReady = true;
+          if (window.onMathJaxReady) {
+            window.onMathJaxReady();
+          }
+          initializeWhenReady();
+          return window.MathJax.startup.defaultPageReady();
+        }
+      },
+      tex: {
+        inlineMath: [
+          ['\\(', '\\)']
+        ],
+        displayMath: [
+          ['\\[', '\\]']
+        ],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        renderActions: {
+          addMenu: [0, '', '']
+        }
+      }
+    };
+  } else {
+    // If MathJax isn't available, proceed after a timeout
+    console.warn('MathJax not found, proceeding without it');
+    setTimeout(() => {
+      mathJaxReady = true;
+      initializeWhenReady();
+    }, 1000);
+  }
+}
+
+function waitForMathJax() {
+  return new Promise((resolve) => {
+    if (window.MathJax && mathJaxReady) {
+      console.log('MathJax already loaded and ready');
+      resolve();
+      return;
+    }
+    
+    if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+      window.MathJax.startup.promise.then(() => {
+        mathJaxReady = true;
+        resolve();
+      }).catch(error => {
+        console.warn('MathJax startup error:', error);
+        mathJaxReady = true; // Proceed anyway
+        resolve();
+      });
+    } else {
+      // Set up a listener for when MathJax is ready
+      window.onMathJaxReady = () => {
+        mathJaxReady = true;
+        resolve();
+      };
+      
+      // Fallback: check every 500ms
+      const checkInterval = setInterval(() => {
+        if (window.MathJax && (window.MathJax.typesetPromise || window.MathJax.typeset)) {
+          clearInterval(checkInterval);
+          mathJaxReady = true;
+          resolve();
+        }
+      }, 500);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.warn('MathJax loading timeout - proceeding without it');
+        mathJaxReady = true;
+        resolve();
+      }, 10000);
+    }
+  });
+}
+
+function displayQuestion() {
+  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
+    console.error('No questions available to display');
+    return;
+  }
+  
+  const question = currentQuiz.questions[currentQuestionIndex];
+  
+  document.getElementById('question-number').textContent =
+    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+  document.getElementById('question-text').innerHTML = question.question;
+  
+  const optionsContainer = document.getElementById('options');
+  optionsContainer.innerHTML = '';
+  
+  question.options.forEach((option, index) => {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option';
+    optionDiv.innerHTML = option;
+    
+    if (!isMarkingPhase) {
+      optionDiv.onclick = () => selectOption(index);
+    }
+    
+    if (userAnswers[currentQuestionIndex] === index) {
+      optionDiv.classList.add('selected');
+    }
+    
+    optionsContainer.appendChild(optionDiv);
+  });
+  
+  updateNavigation();
+  updateQuestionNavigation();
+  
+  // Render MathJax and show content only when ready
+  renderMathJax().then(() => {
+    console.log('Question displayed with MathJax');
+    // Ensure the question container is visible after MathJax renders
+    const questionContainer = document.getElementById('question-container');
+    if (questionContainer) {
+      questionContainer.style.visibility = 'visible';
+    }
+  }).catch(error => {
+    console.error('Error rendering MathJax:', error);
+    // Still show the content even if MathJax fails
+    const questionContainer = document.getElementById('question-container');
+    if (questionContainer) {
+      questionContainer.style.visibility = 'visible';
+    }
+  });
+}
+
+function initializeApp() {
+  console.log('Initializing app with MathJax ready:', mathJaxReady);
+  
+  // Hide content initially
+  const topicSelection = document.getElementById('topic-selection');
+  const questionContainer = document.getElementById('question-container');
+  
+  if (topicSelection) topicSelection.style.visibility = 'hidden';
+  if (questionContainer) questionContainer.style.visibility = 'hidden';
+  
+  setupSearch();
+  initializeTopicSelection();
+  
+  // Fix: Initialize question count properly
+  updateQuestionCount();
+  
+  // Add event listeners for input changes
+  const questionCountInput = document.getElementById('question-count');
+  if (questionCountInput) {
+    questionCountInput.addEventListener('input', updateQuestionCount);
+    questionCountInput.addEventListener('change', updateQuestionCount);
+  }
+  
+  // Set up all other event listeners
+  const startQuizBtn = document.getElementById('start-quiz-btn');
+  if (startQuizBtn) startQuizBtn.addEventListener('click', startQuiz);
+  
+  const nextBtn = document.getElementById('next-btn');
+  if (nextBtn) nextBtn.addEventListener('click', nextQuestion);
+  
+  const prevBtn = document.getElementById('prev-btn');
+  if (prevBtn) prevBtn.addEventListener('click', previousQuestion);
+  
+  const continueBtn = document.getElementById('continue-btn');
+  if (continueBtn) continueBtn.addEventListener('click', closeFeedback);
+  
+  const tryAgainBtn = document.getElementById('try-again-btn');
+  if (tryAgainBtn) tryAgainBtn.addEventListener('click', restartQuiz);
+  
+  const printBtn = document.getElementById('print-btn');
+  if (printBtn) printBtn.addEventListener('click', printResults);
+  
+  const navToggleBtn = document.getElementById('nav-toggle-btn');
+  if (navToggleBtn) navToggleBtn.addEventListener('click', toggleQuestionNav);
+  
+  const closeNavPanel = document.getElementById('close-nav-panel');
+  if (closeNavPanel) closeNavPanel.addEventListener('click', closeQuestionNav);
+  
+  // Update the validation to use the new function
+  if (questionCountInput) {
+    questionCountInput.addEventListener('change', function() {
+      updateQuestionCount();
+      const value = parseInt(this.value);
+      if (value < 1) this.value = 1;
+      if (value > 200) this.value = 200;
+    });
+  }
+  
+  // Now show the topic selection after everything is initialized
+  setTimeout(() => {
+    if (topicSelection) {
+      topicSelection.classList.remove('hidden');
+      topicSelection.style.visibility = 'visible';
+    }
+    console.log('App initialization complete');
+  }, 100);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM content loaded');
+  domContentLoaded = true;
+  
+  // Configure MathJax first
+  configureMathJax();
+  
+  // Then wait for MathJax to be ready before initializing the app
+  waitForMathJax().then(() => {
+    initializeWhenReady();
+  });
+});
+
+const loadingStyles = `
+#topic-selection,
+#question-container {
+  visibility: hidden;
+}
+
+.mathjax-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-light);
+}
+
+.loading-overlay.hidden {
+  display: none;
+}
+
+.loading-spinner {
+  margin-bottom: var(--spacing-lg);
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+`;
+
+
+const loadingStyleSheet = document.createElement('style');
+loadingStyleSheet.textContent = loadingStyles;
+document.head.appendChild(loadingStyleSheet);
+
+function createLoadingOverlay() {
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.innerHTML = `
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <div>Loading MathJax...</div>
+  `;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+const originalDisplayQuestion = displayQuestion;
+displayQuestion = function() {
+  // Add loading class during MathJax rendering
+  const questionContainer = document.getElementById('question-container');
+  if (questionContainer) {
+    questionContainer.classList.add('mathjax-loading');
+  }
+  
+  originalDisplayQuestion.apply(this, arguments);
+};
+
+const originalInitializeTopicSelection = initializeTopicSelection;
+initializeTopicSelection = function() {
+  originalInitializeTopicSelection.apply(this, arguments);
+  
+  // After topics are rendered, process any MathJax in topic descriptions
+  setTimeout(() => {
+    if (window.MathJax && mathJaxReady) {
+      const topicDescriptions = document.querySelectorAll('.topic-description');
+      if (topicDescriptions.length > 0) {
+        renderMathJax();
+      }
+    }
+  }, 500);
+};
+
+
+
+
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
   
@@ -1536,6 +1769,9 @@ function initializeTopicSelection() {
         }
       });
       
+      // NEW: Render MathJax in topic descriptions after they're created
+      renderMathJaxInTopics();
+      
     } catch (error) {
       console.error('Error initializing topic selection:', error);
       topicsGrid.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Error loading topics. Please refresh the page.</div>';
@@ -1543,66 +1779,127 @@ function initializeTopicSelection() {
   }, 100);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('topic-selection').classList.remove('hidden');
+function renderMathJaxInTopics() {
+  if (!window.MathJax || !mathJaxReady) {
+    console.log('MathJax not ready for topic descriptions');
+    return;
+  }
   
-  setupSearch();
-  initializeTopicSelection();
-  configureMathJax();
-  
-  // Fix: Initialize question count properly
-  updateQuestionCount();
-  
-  // Add event listeners for input changes
-  document.getElementById('question-count').addEventListener('input', updateQuestionCount);
-  document.getElementById('question-count').addEventListener('change', updateQuestionCount);
-  
-  document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
-  document.getElementById('next-btn').addEventListener('click', nextQuestion);
-  document.getElementById('prev-btn').addEventListener('click', previousQuestion);
-  document.getElementById('continue-btn').addEventListener('click', closeFeedback);
-  document.getElementById('try-again-btn').addEventListener('click', restartQuiz);
-  document.getElementById('print-btn').addEventListener('click', printResults);
-  
-  document.getElementById('nav-toggle-btn').addEventListener('click', toggleQuestionNav);
-  document.getElementById('close-nav-panel').addEventListener('click', closeQuestionNav);
-  
-  // Update the validation to use the new function
-  document.getElementById('question-count').addEventListener('change', function() {
-    updateQuestionCount();
-    const value = parseInt(this.value);
-    if (value < 1) this.value = 1;
-    if (value > 200) this.value = 200; // Add upper limit if needed
-  });
-});
-
-// MathJax handling
-function waitForMathJax() {
-  return new Promise((resolve) => {
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      console.log('MathJax already loaded');
-      resolve();
-      return;
-    }
+  // Wait a bit for the DOM to be fully updated
+  setTimeout(() => {
+    const topicDescriptions = document.querySelectorAll('.topic-description');
+    const topicTitles = document.querySelectorAll('.topic-title');
     
-    // Set up a listener for when MathJax is ready
-    window.onMathJaxReady = resolve;
+    const mathElements = [];
     
-    // Fallback: check every 500ms
-    const checkInterval = setInterval(() => {
-      if (window.MathJax && window.MathJax.typesetPromise) {
-        clearInterval(checkInterval);
-        resolve();
+    // Collect all elements that might contain MathJax
+    topicDescriptions.forEach(desc => {
+      if (desc.innerHTML && containsMath(desc.innerHTML)) {
+        mathElements.push(desc);
       }
-    }, 500);
+    });
     
-    // Timeout after 10 seconds
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      console.warn('MathJax loading timeout - proceeding without it');
-      resolve();
-    }, 10000);
-  });
+    topicTitles.forEach(title => {
+      if (title.innerHTML && containsMath(title.innerHTML)) {
+        mathElements.push(title);
+      }
+    });
+    
+    if (mathElements.length > 0) {
+      console.log(`Rendering MathJax for ${mathElements.length} topic elements`);
+      
+      if (window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise(mathElements)
+          .then(() => {
+            console.log('MathJax rendered in topic descriptions');
+          })
+          .catch(error => {
+            console.warn('Error rendering MathJax in topics:', error);
+          });
+      } else if (window.MathJax.typeset) {
+        window.MathJax.typeset(mathElements);
+      }
+    }
+  }, 200);
+}
+
+function containsMath(text) {
+  if (!text) return false;
+  
+  // Check for common math delimiters
+  const mathPatterns = [
+    /\\\(.*?\\\)/g,     // \( ... \)
+    /\\\[.*?\\\]/g,     // \[ ... \]
+    /\$.*?\$/g,         // $ ... $
+    /\\begin\{.*?\}.*?\\end\{.*?\}/g,  // LaTeX environments
+    /\\[a-zA-Z]+\{/g    // LaTeX commands
+  ];
+  
+  return mathPatterns.some(pattern => pattern.test(text));
+}
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm || !text) return text;
+  
+  try {
+    // More comprehensive math pattern matching
+    const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$|\\begin\{.*?\}.*?\\end\{.*?\}|\\[a-zA-Z]+\{.*?\}/g;
+    const mathParts = [];
+    let mathIndex = 0;
+    
+    // Replace math content with placeholders
+    const textWithPlaceholders = text.replace(mathRegex, (match) => {
+      const placeholder = `__MATH_${mathIndex}__`;
+      mathParts.push(match);
+      mathIndex++;
+      return placeholder;
+    });
+    
+    // Apply highlighting to non-math text
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
+    
+    // Restore math content
+    const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
+      return mathParts[parseInt(index)] || match;
+    });
+    
+    return finalText;
+  } catch (e) {
+    console.warn('Error highlighting text:', e);
+    return text;
+  }
+}
+
+function createTopicElement(topicId) {
+  const topic = getTopicInf(topicId);
+  if (!topic) return null;
+  
+  const category = getCategoryForTop(topicId);
+  
+  const topicItem = document.createElement('div');
+  topicItem.className = 'topic-item';
+  topicItem.setAttribute('data-category', category);
+  topicItem.setAttribute('data-topic-id', topicId);
+  
+  if (selectedTopics.has(topicId)) {
+    topicItem.classList.add('selected');
+  }
+  topicItem.onclick = () => toggleTopic(topicId, topicItem);
+  
+  const highlightedTitle = highlightText(topic.title, searchTerm);
+  const highlightedDescription = highlightText(topic.description, searchTerm);
+  
+  topicItem.innerHTML = `
+    <div class="topic-checkbox ${selectedTopics.has(topicId) ? 'checked' : ''}"></div>
+    <div class="topic-content">
+      <span class="topic-title">${highlightedTitle}</span>
+      <span class="topic-description">${highlightedDescription}</span>
+      <span class="topic-category" data-category="${category}">${category}</span>
+    </div>
+  `;
+  
+  return topicItem;
 }
 
 function renderMathJax() {
@@ -1613,27 +1910,55 @@ function renderMathJax() {
   
   return new Promise((resolve) => {
     setTimeout(() => {
+      // Collect ALL elements that might contain MathJax
       const elements = [
         document.getElementById('question-text'),
-        document.getElementById('options')
-      ].filter(el => el);
+        document.getElementById('options'),
+        document.getElementById('correct-answer-text'),
+        document.getElementById('feedback-explanation')
+      ].filter(el => el && el.innerHTML);
+      
+      // Also include topic descriptions and titles if we're in topic selection
+      const topicDescriptions = document.querySelectorAll('.topic-description');
+      const topicTitles = document.querySelectorAll('.topic-title');
+      
+      // Filter only elements that actually contain math content
+      const allMathElements = [...elements];
+      
+      topicDescriptions.forEach(desc => {
+        if (desc.innerHTML && containsMath(desc.innerHTML)) {
+          allMathElements.push(desc);
+        }
+      });
+      
+      topicTitles.forEach(title => {
+        if (title.innerHTML && containsMath(title.innerHTML)) {
+          allMathElements.push(title);
+        }
+      });
+      
+      if (allMathElements.length === 0) {
+        resolve();
+        return;
+      }
+      
+      console.log(`Rendering MathJax for ${allMathElements.length} elements`);
       
       if (window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise(elements)
+        window.MathJax.typesetPromise(allMathElements)
           .then(() => {
-            console.log('MathJax rendering complete');
+            console.log('MathJax rendering complete for all elements');
             resolve();
           })
           .catch(error => {
             console.warn('MathJax typeset error:', error);
-            // Try fallback
             if (window.MathJax.typeset) {
-              window.MathJax.typeset();
+              window.MathJax.typeset(allMathElements);
             }
             resolve();
           });
       } else if (window.MathJax.typeset) {
-        window.MathJax.typeset();
+        window.MathJax.typeset(allMathElements);
         resolve();
       } else {
         resolve();
@@ -1642,42 +1967,77 @@ function renderMathJax() {
   });
 }
 
-function displayQuestion() {
-  if (!currentQuiz || !currentQuiz.questions || currentQuiz.questions.length === 0) {
-    console.error('No questions available to display');
-    return;
+const originalSetupSearch = setupSearch;
+setupSearch = function() {
+  originalSetupSearch.apply(this, arguments);
+  
+  const topicSearch = document.getElementById('topic-search');
+  const clearSearch = document.getElementById('clear-search');
+  
+  if (topicSearch) {
+    let searchTimeout;
+    topicSearch.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchTerm = this.value;
+        initializeTopicSelection();
+        
+        // Re-render MathJax after search results are displayed
+        setTimeout(() => {
+          if (window.MathJax && mathJaxReady) {
+            renderMathJaxInTopics();
+          }
+        }, 400);
+      }, 300);
+    });
   }
+};
+
+const originalInitializeCustomDropdown = initializeCustomDropdown;
+initializeCustomDropdown = function() {
+  originalInitializeCustomDropdown.apply(this, arguments);
   
-  const question = currentQuiz.questions[currentQuestionIndex];
+  const dropdown = document.getElementById('sort-dropdown');
+  if (!dropdown) return;
   
-  document.getElementById('question-number').textContent =
-    `${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
-  document.getElementById('question-text').innerHTML = question.question;
+  const optionElements = dropdown.querySelectorAll('.dropdown-option');
   
-  const optionsContainer = document.getElementById('options');
-  optionsContainer.innerHTML = '';
-  
-  question.options.forEach((option, index) => {
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'option';
-    optionDiv.innerHTML = option;
-    
-    if (!isMarkingPhase) {
-      optionDiv.onclick = () => selectOption(index);
-    }
-    
-    if (userAnswers[currentQuestionIndex] === index) {
-      optionDiv.classList.add('selected');
-    }
-    
-    optionsContainer.appendChild(optionDiv);
+  optionElements.forEach(option => {
+    const originalClick = option.onclick;
+    option.onclick = function(e) {
+      if (originalClick) originalClick.call(this, e);
+      
+      // Re-render MathJax after sorting
+      setTimeout(() => {
+        if (window.MathJax && mathJaxReady) {
+          renderMathJaxInTopics();
+        }
+      }, 400);
+    };
   });
-  
-  updateNavigation();
-  updateQuestionNavigation();
-  
-  // Render MathJax
-  renderMathJax().then(() => {
-    console.log('Question displayed with MathJax');
-  });
+};
+
+const topicMathJaxStyles = `
+.topic-description mjx-container,
+.topic-title mjx-container {
+  display: inline-block;
+  vertical-align: middle;
 }
+
+.topic-description mjx-container {
+  font-size: 0.9em;
+}
+
+.topic-item {
+  position: relative;
+}
+
+/* Ensure MathJax doesn't break the topic item layout */
+.topic-content mjx-container {
+  line-height: 1.3;
+}
+`;
+
+const topicStyleSheet = document.createElement('style');
+topicStyleSheet.textContent = topicMathJaxStyles;
+document.head.appendChild(topicStyleSheet);
