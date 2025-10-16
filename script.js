@@ -2240,7 +2240,7 @@ function showFallbackWarning() {
   warning.className = 'mathjax-fallback-warning';
   warning.innerHTML = `
     <i class="fas fa-exclamation-triangle"></i>
-    Math rendering simplified. Some equations may not display perfectly.
+    Math rendering simplified. Some equations may not display perfectly. Try reloading to fix this problem.
   `;
   
   // Insert at the top of the main content
