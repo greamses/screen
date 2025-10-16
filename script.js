@@ -34,6 +34,28 @@ let selectedTopics = new Set();
 let searchTerm = '';
 let sortBy = 'alphabetical';
 
+// MathJax loading states
+let mathJaxReady = false;
+let domContentLoaded = false;
+let initializationPending = false;
+
+// Add missing function definitions
+function getAllCategories() {
+  return getAllCats();
+}
+
+function getTopicsByCategory(category) {
+  return getTopicsByCat(category);
+}
+
+function getCategoryInfo(category) {
+  return getCategoryInf(category);
+}
+
+function getTopicInfo(topicId) {
+  return getTopicInf(topicId);
+}
+
 function toggleTopic(topicId, topicElement) {
   const checkbox = topicElement.querySelector('.topic-checkbox');
   
@@ -77,10 +99,10 @@ function refreshCategoryProgress() {
 }
 
 function getFilteredAndSortedTopics() {
-  const allTopics = getAllTopics(); // Changed from getAllQuizTopics()
+  const allTopics = getAllTopics();
   
   let filteredTopics = allTopics.filter(topicId => {
-    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    const topic = getTopicInf(topicId);
     return topic && (
       topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       topic.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -89,20 +111,20 @@ function getFilteredAndSortedTopics() {
   
   if (sortBy === 'alphabetical') {
     filteredTopics.sort((a, b) => {
-      const topicA = getTopicInf(a); // Changed from getTopicInfo()
-      const topicB = getTopicInf(b); // Changed from getTopicInfo()
+      const topicA = getTopicInf(a);
+      const topicB = getTopicInf(b);
       return topicA.title.localeCompare(topicB.title);
     });
   } else if (sortBy === 'category') {
-    const categories = getAllCats(); // Changed from getAllCategories()
+    const categories = getAllCats();
     const categorizedTopics = {};
     
     categories.forEach(category => {
-      categorizedTopics[category] = getTopicsByCat(category) // Changed from getTopicsByCategory()
+      categorizedTopics[category] = getTopicsByCat(category)
         .filter(topicId => filteredTopics.includes(topicId))
         .sort((a, b) => {
-          const topicA = getTopicInf(a); // Changed from getTopicInfo()
-          const topicB = getTopicInf(b); // Changed from getTopicInfo()
+          const topicA = getTopicInf(a);
+          const topicB = getTopicInf(b);
           return topicA.title.localeCompare(topicB.title);
         });
     });
@@ -141,7 +163,7 @@ function startQuiz() {
   
   let totalAvailableQuestions = 0;
   selectedTopicsArray.forEach(topicId => {
-    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    const topic = getTopicInf(topicId);
     if (topic && topic.generator) {
       totalAvailableQuestions += 10;
     }
@@ -153,7 +175,7 @@ function startQuiz() {
   }
   
   selectedTopicsArray.forEach((topicId, index) => {
-    const topic = getTopicInf(topicId); // Changed from getTopicInfo()
+    const topic = getTopicInf(topicId);
     if (topic && topic.generator) {
       const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
       
@@ -180,7 +202,7 @@ function startQuiz() {
   const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
   
   currentQuiz = {
-    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInf(id).title).join(', ')})`, // Changed from getTopicInfo()
+    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInf(id).title).join(', ')})`,
     questions: shuffledQuestions,
     settings: {
       questionCount: shuffledQuestions.length,
@@ -257,7 +279,6 @@ function setupSearch() {
 function startTimer() {
   updateTimerDisplay();
   
-  // Fix: Don't start timer if timer setting is 0
   if (getCurrentTimerSetting() === 0) {
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -286,7 +307,6 @@ function updateTimerDisplay() {
   const timerElement = document.getElementById('timer');
   if (!timerElement) return;
   
-  // Fix: Handle timer display when no timer is set
   if (timeRemaining === 0 && getCurrentTimerSetting() === 0) {
     timerElement.textContent = 'No Timer';
     timerElement.classList.remove('time-warning', 'pulse', 'time-expired');
@@ -324,12 +344,10 @@ function updateNavigation() {
   
   if (nextBtn) {
     if (currentQuestionIndex === currentQuiz.questions.length - 1) {
-      // Change to submit icon and styling
       nextBtn.innerHTML = '<i class="fas fa-check"></i>';
       nextBtn.className = 'btn btn-success';
       nextBtn.title = 'Submit Quiz';
     } else {
-      // Change to next arrow icon and default styling
       nextBtn.innerHTML = '<i class="fas fa-arrow-right"></i>';
       nextBtn.className = 'btn';
       nextBtn.title = 'Next Question';
@@ -546,7 +564,6 @@ const additionalStyles = `
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-
 @media (max-width: 768px) {
     .dropdown-options {
         position: fixed;
@@ -695,7 +712,6 @@ const timerStyles = `
     color: var(--color-warning);
 }
 `;
-
 
 function initializeAllDropdowns() {
   initializeCustomDropdown();
@@ -898,7 +914,6 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
       hasAnyTopics = true;
       const categoryInfo = getCategoryInfo(category);
       
-      // Calculate completion progress for this category
       const selectedInCategory = categoryTopics.filter(topicId =>
         selectedTopics.has(topicId)
       ).length;
@@ -906,7 +921,7 @@ function renderTopicsByCategory(filteredTopics, topicsGrid) {
       
       const categoryHeader = document.createElement('div');
       categoryHeader.className = 'category-header';
-      categoryHeader.setAttribute('data-category', category.toLowerCase().replace(/\s+/g, '-')); // Convert to lowercase with dashes
+      categoryHeader.setAttribute('data-category', category.toLowerCase().replace(/\s+/g, '-'));
       categoryHeader.innerHTML = `
         <div class="category-title">
           <i class="fas fa-${categoryInfo.icon || 'folder'}"></i> ${categoryInfo.name}
@@ -1063,106 +1078,6 @@ function updateQuestionCount() {
   }
 }
 
-function startQuiz() {
-  if (selectedTopics.size === 0) {
-    alert('Please select at least one topic');
-    return;
-  }
-  
-  updateQuestionCount();
-  
-  const difficultyInput = document.getElementById('difficulty');
-  const generatePrintInput = document.getElementById('generate-print');
-  
-  const currentDifficulty = difficultyInput ? difficultyInput.value || 'medium' : 'medium';
-  const currentGeneratePrint = generatePrintInput ? generatePrintInput.checked : true;
-  const currentTimerSetting = getCurrentTimerSetting();
-  
-  const allQuestions = [];
-  const selectedTopicsArray = Array.from(selectedTopics);
-  
-  const baseQuestionsPerTopic = Math.floor(questionCount / selectedTopicsArray.length);
-  const remainder = questionCount % selectedTopicsArray.length;
-  
-  let totalAvailableQuestions = 0;
-  selectedTopicsArray.forEach(topicId => {
-    const topic = getTopicInfo(topicId);
-    if (topic && topic.generator) {
-      totalAvailableQuestions += 10; //
-    }
-  });
-  
-  if (totalAvailableQuestions < questionCount) {
-    alert(`Not enough questions available. Maximum available: ${totalAvailableQuestions}`);
-    return;
-  }
-  
-  selectedTopicsArray.forEach((topicId, index) => {
-    const topic = getTopicInfo(topicId);
-    if (topic && topic.generator) {
-      const questionsNeeded = baseQuestionsPerTopic + (index < remainder ? 1 : 0);
-      
-      try {
-        const questions = topic.generator(questionsNeeded);
-        if (questions && questions.length > 0) {
-          allQuestions.push(...questions);
-        }
-      } catch (error) {
-        console.error('Error generating questions for topic:', topicId, error);
-      }
-    }
-  });
-  
-  if (allQuestions.length === 0) {
-    alert('Could not generate any questions. Please try different topics.');
-    return;
-  }
-  
-  if (allQuestions.length < questionCount) {
-    console.warn(`Requested ${questionCount} questions but only got ${allQuestions.length}`);
-  }
-  
-  const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
-  
-  currentQuiz = {
-    title: `Custom Quiz (${Array.from(selectedTopics).map(id => getTopicInfo(id).title).join(', ')})`,
-    questions: shuffledQuestions,
-    settings: {
-      questionCount: shuffledQuestions.length, // Use actual count
-      timerSetting: currentTimerSetting,
-      difficulty: currentDifficulty,
-      generatePrint: currentGeneratePrint
-    }
-  };
-  
-  userAnswers = new Array(currentQuiz.questions.length).fill(null);
-  timeRemaining = currentTimerSetting;
-  startTime = new Date();
-  
-  createQuestionNavigation();
-  
-  document.getElementById('topic-selection').classList.add('hidden');
-  document.getElementById('quiz-header').classList.remove('hidden');
-  document.getElementById('question-container').classList.remove('hidden');
-  document.getElementById('navigation').classList.remove('hidden');
-  
-  document.getElementById('quiz-title').textContent = currentQuiz.title;
-  
-  // Fix: Initialize timer properly
-  if (currentTimerSetting > 0) {
-    startTimer();
-  } else {
-    document.getElementById('timer').textContent = 'No Timer';
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-  }
-  
-  currentQuestionIndex = 0;
-  displayQuestion();
-}
-
 function markNextQuestion() {
   if (markingIndex >= currentQuiz.questions.length) {
     showResults();
@@ -1181,7 +1096,6 @@ function markNextQuestion() {
     option.onclick = null;
     option.classList.remove('correct', 'incorrect');
     
-    // Fix: Clear previous result icons
     const existingIcons = option.querySelectorAll('.result-icon');
     existingIcons.forEach(icon => icon.remove());
     
@@ -1194,7 +1108,6 @@ function markNextQuestion() {
     }
   });
   
-  // Fix: Properly handle the case where user didn't answer
   if (userAnswer !== correctAnswer && userAnswer !== null) {
     showFeedback(question);
   } else {
@@ -1404,11 +1317,7 @@ function printResults() {
   }, 100);
 }
 
-
-let mathJaxReady = false;
-let domContentLoaded = false;
-let initializationPending = false;
-
+// MathJax Integration Functions
 function initializeWhenReady() {
   if (mathJaxReady && domContentLoaded && !initializationPending) {
     initializationPending = true;
@@ -1448,7 +1357,6 @@ function configureMathJax() {
       }
     };
   } else {
-    // If MathJax isn't available, proceed after a timeout
     console.warn('MathJax not found, proceeding without it');
     setTimeout(() => {
       mathJaxReady = true;
@@ -1471,17 +1379,15 @@ function waitForMathJax() {
         resolve();
       }).catch(error => {
         console.warn('MathJax startup error:', error);
-        mathJaxReady = true; // Proceed anyway
+        mathJaxReady = true;
         resolve();
       });
     } else {
-      // Set up a listener for when MathJax is ready
       window.onMathJaxReady = () => {
         mathJaxReady = true;
         resolve();
       };
       
-      // Fallback: check every 500ms
       const checkInterval = setInterval(() => {
         if (window.MathJax && (window.MathJax.typesetPromise || window.MathJax.typeset)) {
           clearInterval(checkInterval);
@@ -1490,7 +1396,6 @@ function waitForMathJax() {
         }
       }, 500);
       
-      // Timeout after 10 seconds
       setTimeout(() => {
         clearInterval(checkInterval);
         console.warn('MathJax loading timeout - proceeding without it');
@@ -1535,17 +1440,14 @@ function displayQuestion() {
   updateNavigation();
   updateQuestionNavigation();
   
-  // Render MathJax and show content only when ready
   renderMathJax().then(() => {
     console.log('Question displayed with MathJax');
-    // Ensure the question container is visible after MathJax renders
     const questionContainer = document.getElementById('question-container');
     if (questionContainer) {
       questionContainer.style.visibility = 'visible';
     }
   }).catch(error => {
     console.error('Error rendering MathJax:', error);
-    // Still show the content even if MathJax fails
     const questionContainer = document.getElementById('question-container');
     if (questionContainer) {
       questionContainer.style.visibility = 'visible';
@@ -1556,7 +1458,6 @@ function displayQuestion() {
 function initializeApp() {
   console.log('Initializing app with MathJax ready:', mathJaxReady);
   
-  // Hide content initially
   const topicSelection = document.getElementById('topic-selection');
   const questionContainer = document.getElementById('question-container');
   
@@ -1566,17 +1467,14 @@ function initializeApp() {
   setupSearch();
   initializeTopicSelection();
   
-  // Fix: Initialize question count properly
   updateQuestionCount();
   
-  // Add event listeners for input changes
   const questionCountInput = document.getElementById('question-count');
   if (questionCountInput) {
     questionCountInput.addEventListener('input', updateQuestionCount);
     questionCountInput.addEventListener('change', updateQuestionCount);
   }
   
-  // Set up all other event listeners
   const startQuizBtn = document.getElementById('start-quiz-btn');
   if (startQuizBtn) startQuizBtn.addEventListener('click', startQuiz);
   
@@ -1601,7 +1499,6 @@ function initializeApp() {
   const closeNavPanel = document.getElementById('close-nav-panel');
   if (closeNavPanel) closeNavPanel.addEventListener('click', closeQuestionNav);
   
-  // Update the validation to use the new function
   if (questionCountInput) {
     questionCountInput.addEventListener('change', function() {
       updateQuestionCount();
@@ -1611,7 +1508,6 @@ function initializeApp() {
     });
   }
   
-  // Now show the topic selection after everything is initialized
   setTimeout(() => {
     if (topicSelection) {
       topicSelection.classList.remove('hidden');
@@ -1625,10 +1521,8 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM content loaded');
   domContentLoaded = true;
   
-  // Configure MathJax first
   configureMathJax();
   
-  // Then wait for MathJax to be ready before initializing the app
   waitForMathJax().then(() => {
     initializeWhenReady();
   });
@@ -1670,8 +1564,25 @@ const loadingStyles = `
   font-size: 2rem;
   color: var(--color-primary);
 }
-`;
 
+.topic-description mjx-container,
+.topic-title mjx-container {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.topic-description mjx-container {
+  font-size: 0.9em;
+}
+
+.topic-item {
+  position: relative;
+}
+
+.topic-content mjx-container {
+  line-height: 1.3;
+}
+`;
 
 const loadingStyleSheet = document.createElement('style');
 loadingStyleSheet.textContent = loadingStyles;
@@ -1690,9 +1601,9 @@ function createLoadingOverlay() {
   return overlay;
 }
 
+// Enhanced displayQuestion with loading state
 const originalDisplayQuestion = displayQuestion;
 displayQuestion = function() {
-  // Add loading class during MathJax rendering
   const questionContainer = document.getElementById('question-container');
   if (questionContainer) {
     questionContainer.classList.add('mathjax-loading');
@@ -1701,24 +1612,7 @@ displayQuestion = function() {
   originalDisplayQuestion.apply(this, arguments);
 };
 
-const originalInitializeTopicSelection = initializeTopicSelection;
-initializeTopicSelection = function() {
-  originalInitializeTopicSelection.apply(this, arguments);
-  
-  // After topics are rendered, process any MathJax in topic descriptions
-  setTimeout(() => {
-    if (window.MathJax && mathJaxReady) {
-      const topicDescriptions = document.querySelectorAll('.topic-description');
-      if (topicDescriptions.length > 0) {
-        renderMathJax();
-      }
-    }
-  }, 500);
-};
-
-
-
-
+// Enhanced topic selection with MathJax support
 function initializeTopicSelection() {
   const topicsGrid = document.getElementById('topics-grid');
   
@@ -1755,7 +1649,6 @@ function initializeTopicSelection() {
       
       updateStartButton();
       
-      // Fix: Add animation with error handling
       const topicItems = topicsGrid.querySelectorAll('.topic-item');
       topicItems.forEach((item, index) => {
         if (item && item.style) {
@@ -1769,7 +1662,6 @@ function initializeTopicSelection() {
         }
       });
       
-      // NEW: Render MathJax in topic descriptions after they're created
       renderMathJaxInTopics();
       
     } catch (error) {
@@ -1785,14 +1677,12 @@ function renderMathJaxInTopics() {
     return;
   }
   
-  // Wait a bit for the DOM to be fully updated
   setTimeout(() => {
     const topicDescriptions = document.querySelectorAll('.topic-description');
     const topicTitles = document.querySelectorAll('.topic-title');
     
     const mathElements = [];
     
-    // Collect all elements that might contain MathJax
     topicDescriptions.forEach(desc => {
       if (desc.innerHTML && containsMath(desc.innerHTML)) {
         mathElements.push(desc);
@@ -1826,13 +1716,12 @@ function renderMathJaxInTopics() {
 function containsMath(text) {
   if (!text) return false;
   
-  // Check for common math delimiters
   const mathPatterns = [
-    /\\\(.*?\\\)/g,     // \( ... \)
-    /\\\[.*?\\\]/g,     // \[ ... \]
-    /\$.*?\$/g,         // $ ... $
-    /\\begin\{.*?\}.*?\\end\{.*?\}/g,  // LaTeX environments
-    /\\[a-zA-Z]+\{/g    // LaTeX commands
+    /\\\(.*?\\\)/g,
+    /\\\[.*?\\\]/g,
+    /\$.*?\$/g,
+    /\\begin\{.*?\}.*?\\end\{.*?\}/g,
+    /\\[a-zA-Z]+\{/g
   ];
   
   return mathPatterns.some(pattern => pattern.test(text));
@@ -1842,12 +1731,10 @@ function highlightText(text, searchTerm) {
   if (!searchTerm || !text) return text;
   
   try {
-    // More comprehensive math pattern matching
     const mathRegex = /\\\(.*?\\\)|\\\[.*?\\\]|\$.*?\$|\\begin\{.*?\}.*?\\end\{.*?\}|\\[a-zA-Z]+\{.*?\}/g;
     const mathParts = [];
     let mathIndex = 0;
     
-    // Replace math content with placeholders
     const textWithPlaceholders = text.replace(mathRegex, (match) => {
       const placeholder = `__MATH_${mathIndex}__`;
       mathParts.push(match);
@@ -1855,11 +1742,9 @@ function highlightText(text, searchTerm) {
       return placeholder;
     });
     
-    // Apply highlighting to non-math text
     const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const highlightedText = textWithPlaceholders.replace(regex, '<mark>$1</mark>');
     
-    // Restore math content
     const finalText = highlightedText.replace(/__MATH_(\d+)__/g, (match, index) => {
       return mathParts[parseInt(index)] || match;
     });
@@ -1910,7 +1795,6 @@ function renderMathJax() {
   
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Collect ALL elements that might contain MathJax
       const elements = [
         document.getElementById('question-text'),
         document.getElementById('options'),
@@ -1918,11 +1802,9 @@ function renderMathJax() {
         document.getElementById('feedback-explanation')
       ].filter(el => el && el.innerHTML);
       
-      // Also include topic descriptions and titles if we're in topic selection
       const topicDescriptions = document.querySelectorAll('.topic-description');
       const topicTitles = document.querySelectorAll('.topic-title');
       
-      // Filter only elements that actually contain math content
       const allMathElements = [...elements];
       
       topicDescriptions.forEach(desc => {
@@ -1967,6 +1849,7 @@ function renderMathJax() {
   });
 }
 
+// Enhanced search with MathJax support
 const originalSetupSearch = setupSearch;
 setupSearch = function() {
   originalSetupSearch.apply(this, arguments);
@@ -1982,7 +1865,6 @@ setupSearch = function() {
         searchTerm = this.value;
         initializeTopicSelection();
         
-        // Re-render MathJax after search results are displayed
         setTimeout(() => {
           if (window.MathJax && mathJaxReady) {
             renderMathJaxInTopics();
@@ -1993,6 +1875,7 @@ setupSearch = function() {
   }
 };
 
+// Enhanced dropdown with MathJax support
 const originalInitializeCustomDropdown = initializeCustomDropdown;
 initializeCustomDropdown = function() {
   originalInitializeCustomDropdown.apply(this, arguments);
@@ -2007,7 +1890,6 @@ initializeCustomDropdown = function() {
     option.onclick = function(e) {
       if (originalClick) originalClick.call(this, e);
       
-      // Re-render MathJax after sorting
       setTimeout(() => {
         if (window.MathJax && mathJaxReady) {
           renderMathJaxInTopics();
@@ -2016,28 +1898,3 @@ initializeCustomDropdown = function() {
     };
   });
 };
-
-const topicMathJaxStyles = `
-.topic-description mjx-container,
-.topic-title mjx-container {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.topic-description mjx-container {
-  font-size: 0.9em;
-}
-
-.topic-item {
-  position: relative;
-}
-
-/* Ensure MathJax doesn't break the topic item layout */
-.topic-content mjx-container {
-  line-height: 1.3;
-}
-`;
-
-const topicStyleSheet = document.createElement('style');
-topicStyleSheet.textContent = topicMathJaxStyles;
-document.head.appendChild(topicStyleSheet);
