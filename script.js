@@ -2843,34 +2843,3 @@ function safeRenderMathJax() {
     });
 }
 
-function showFallbackWarning() {
-  // Remove existing warning
-  const existingWarning = document.querySelector('.mathjax-fallback-warning');
-  if (existingWarning) {
-    existingWarning.remove();
-  }
-  
-  const warning = document.createElement('div');
-  warning.className = 'mathjax-fallback-warning';
-  warning.innerHTML = `
-    <i class="fas fa-exclamation-triangle"></i>
-    Math rendering simplified. Some equations may not display perfectly. Try reloading to fix this problem.
-  `;
-  
-  // Insert at the top of the main content
-  const mainContent = document.querySelector('.container') || document.body;
-  mainContent.insertBefore(warning, mainContent.firstChild);
-  
-  // Auto-remove after 5 seconds
-  setTimeout(() => {
-    if (document.body.contains(warning)) {
-      warning.style.opacity = '0';
-      warning.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => {
-        if (document.body.contains(warning)) {
-          warning.remove();
-        }
-      }, 500);
-    }
-  }, 5000);
-}
