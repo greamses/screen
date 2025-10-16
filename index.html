@@ -14,8 +14,12 @@
     <script>
         window.MathJax = {
             tex: {
-                inlineMath: [['\\(', '\\)']],
-                displayMath: [['\\[', '\\]']],
+                inlineMath: [
+                    ['\\(', '\\)']
+                ],
+                displayMath: [
+                    ['\\[', '\\]']
+                ],
                 processEscapes: true,
                 processEnvironments: true
             },
@@ -26,6 +30,215 @@
     </script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Professional Footer Scrolling Styles */
+        .scrolling-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--color-white);
+            color: var(--color-text);
+            padding: var(--spacing-md) 0;
+            font-size: var(--font-size-sm);
+            font-family: var(--font-family);
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+            border-top: 3px solid var(--color-primary);
+            overflow: hidden;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .scrolling-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+        
+        .scrolling-content {
+            display: flex;
+            align-items: center;
+            animation: scrollFooter 40s linear infinite;
+            padding-right: 50px;
+            flex-shrink: 0;
+        }
+        
+        .scrolling-item {
+            display: flex;
+            align-items: center;
+            margin: 0 var(--spacing-xl);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--color-secondary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--color-border);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+        
+        .scrolling-item:hover {
+            background: var(--color-primary-light);
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .scrolling-icon {
+            margin-right: var(--spacing-sm);
+            color: var(--color-primary);
+            font-size: var(--font-size-lg);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .scrolling-text {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+        
+        .scrolling-highlight {
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-left: var(--spacing-xs);
+        }
+        
+        .scrolling-close {
+            position: absolute;
+            right: var(--spacing-lg);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--color-primary);
+            border: none;
+            color: var(--color-white);
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-full);
+            transition: all var(--transition-fast);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .scrolling-close:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .scrolling-indicator {
+            position: absolute;
+            left: var(--spacing-lg);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            color: var(--color-primary);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            background: var(--color-primary-light);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-full);
+            border: 1px solid var(--color-primary);
+        }
+        
+        .scrolling-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes scrollFooter {
+            0% {
+                transform: translateX(0);
+            }
+            
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+        
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            
+            50% {
+                opacity: 0.7;
+                transform: scale(1.2);
+            }
+        }
+        
+        /* Pause animation on hover */
+        .scrolling-footer:hover .scrolling-content {
+            animation-play-state: paused;
+        }
+        
+        /* Progress bar */
+        .scrolling-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--color-border);
+        }
+        
+        .scrolling-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+            width: 0%;
+            animation: progress 30s linear;
+        }
+        
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+            
+            100% {
+                width: 100%;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .scrolling-container {
+                padding: 0 var(--spacing-md);
+            }
+            
+            .scrolling-item {
+                margin: 0 var(--spacing-md);
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
+            
+            .scrolling-indicator {
+                display: none;
+            }
+            
+            .scrolling-footer {
+                padding: var(--spacing-sm) 0;
+            }
+        }
+        
+        /* Container adjustment */
+        .container {
+            padding-bottom: 80px;
+        }
+    </style>
 </head>
 
 <body>
@@ -194,8 +407,56 @@
         </div>
     </div>
     
-    <!-- Footer -->
-    <footer class="footer">
+    <!-- Professional Scrolling Footer -->
+    <div class="scrolling-footer" id="scrolling-footer">
+        <div class="scrolling-progress">
+            <div class="scrolling-progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="scrolling-container">
+            <div class="scrolling-indicator">
+                <div class="scrolling-dot"></div>
+                SPECIAL OFFER
+            </div>
+            <div class="scrolling-content">
+                <div class="scrolling-item">
+                    <i class="fas fa-graduation-cap scrolling-icon"></i>
+                    <span class="scrolling-text">Premium Math Tutoring</span>
+                    <span class="scrolling-highlight">All Levels</span>
+                </div>
+                <div class="scrolling-item">
+                    <i class="fas fa-phone scrolling-icon"></i>
+                    <span class="scrolling-text">Call Now</span>
+                    <span class="scrolling-highlight">+234 811 053 5447</span>
+                </div>
+                <div class="scrolling-item">
+                    <i class="fas fa-phone scrolling-icon"></i>
+                    <span class="scrolling-text">Alternative</span>
+                    <span class="scrolling-highlight">+234 916 763 8719</span>
+                </div>
+                <div class="scrolling-item">
+                    <i class="fas fa-envelope scrolling-icon"></i>
+                    <span class="scrolling-text">Email Us</span>
+                    <span class="scrolling-highlight">eemadanyel@gmail.com</span>
+                </div>
+                <div class="scrolling-item">
+                    <i class="fas fa-clock scrolling-icon"></i>
+                    <span class="scrolling-text">Available</span>
+                    <span class="scrolling-highlight">Mon-Sun</span>
+                </div>
+                <div class="scrolling-item">
+                    <i class="fas fa-certificate scrolling-icon"></i>
+                    <span class="scrolling-text">Superbrain Quiz</span>
+                    <span class="scrolling-highlight">2025</span>
+                </div>
+            </div>
+            <button class="scrolling-close" id="scrolling-close" title="Close notification">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Original Footer - Hidden -->
+    <footer class="footer" style="display: none;">
         <div class="footer-content">
             <div class="footer-section">
                 <h3><i class="fas fa-graduation-cap"></i> About Our Services</h3>
@@ -252,22 +513,65 @@
     
     <div class="safe-area-spacer"></div>
     
-<!-- At the bottom of your body -->
-<div class="safe-area-spacer"></div>
+    
+    <script src="./binary.js"></script>
+    <script src="./roman.js"></script>
+    <script src="./sequences.js"></script>
+    <script src="./permutation.js"></script>
+    <script src="./algebra1.js"></script>
+    <script src="./algebra2.js"></script>
+    <script src="./algebra3.js"></script>
+    
+    <script src="./quizData.js"></script>
+    <script src="./script.js"></script>
+    
+    <script>
+        function initScrollingFooter() {
+            const scrollingFooter = document.getElementById('scrolling-footer');
+            const closeButton = document.getElementById('scrolling-close');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (!scrollingFooter) return;
+            
+            let progressInterval;
+            let displayInterval;
+            
+            function showFooter() {
+                scrollingFooter.style.display = 'block';
+                
 
-<!-- Load all question generator scripts first -->
-<script src="./binary.js"></script>
-<script src="./roman.js"></script>
-<script src="./sequences.js"></script>
-<script src="./permutation.js"></script>
-<script src="./algebra1.js"></script>
-<script src="./algebra2.js"></script>
-<script src="./algebra3.js"></script>
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                    progressBar.style.animation = 'progress 30s linear';
+                }
+                
+                // Auto-hide after 30 seconds
+                setTimeout(() => {
+                    hideFooter();
+                }, 60000);
+            }
+            
+            function hideFooter() {
+                scrollingFooter.style.display = 'none';
+                
+                setTimeout(showFooter, 120000);
+            }
+            
+            if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                    hideFooter();
+                    // Don't show again if manually closed
+                    clearTimeout(displayInterval);
+                });
+            }
+            
+            setTimeout(showFooter, 120000);
+            
 
-<!-- Then load quiz data and main script -->
-<script src="./quizData.js"></script>
-<script src="./script.js"></script>
-
+        }
+        
+        document.addEventListener('DOMContentLoaded', initScrollingFooter);
+    </script>
 </body>
 
 </html>
