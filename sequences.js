@@ -52,8 +52,6 @@
   });
 }
 
-// ARITHMETIC SEQUENCE QUESTIONS
-
 function generateArithmeticNthTerm() {
   const a = 2 + Math.floor(Math.random() * 15);
   const d = 2 + Math.floor(Math.random() * 8);
@@ -198,8 +196,6 @@ function generateArithmeticGivenSum() {
     `.trim()
   };
 }
-
-// GEOMETRIC SEQUENCE QUESTIONS
 
 function generateGeometricNthTerm() {
   const a = 2 + Math.floor(Math.random() * 6);
