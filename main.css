@@ -1,5 +1,6 @@
 @import url('./theme.css');
 
+/* ===== RESET & BASE STYLES ===== */
 * {
   margin: 0;
   padding: 0;
@@ -24,35 +25,30 @@ body {
   padding: var(--spacing-lg);
 }
 
-/* Typography */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.3;
   margin-bottom: var(--spacing-md);
 }
 
-h1 {
-  font-size: var(--font-size-3xl);
-}
-
-h2 {
-  font-size: var(--font-size-2xl);
-}
-
-h3 {
-  font-size: var(--font-size-xl);
-}
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
 
 p {
   margin-bottom: var(--spacing-md);
 }
 
-/* Buttons */
+/* ===== UTILITY CLASSES ===== */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-primary { color: var(--color-primary); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-warning { color: var(--color-warning); }
+
+/* ===== BUTTONS ===== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -83,6 +79,7 @@ p {
   cursor: not-allowed;
 }
 
+/* Button Variants */
 .btn-primary {
   background-color: var(--color-primary);
   color: var(--color-white);
@@ -116,6 +113,7 @@ p {
   box-shadow: var(--shadow-lg);
 }
 
+/* Button Sizes & Shapes */
 .btn-small {
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: var(--font-size-sm);
@@ -131,7 +129,7 @@ p {
   justify-content: center;
 }
 
-/* Topic Selection Screen */
+/* ===== TOPIC SELECTION ===== */
 .topic-selection {
   background-color: var(--color-white);
   border-radius: var(--border-radius-xl);
@@ -193,17 +191,7 @@ p {
   color: var(--color-text);
 }
 
-.sort-options {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.sort-options label {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
+/* ===== DROPDOWNS ===== */
 .custom-dropdown {
   position: relative;
   min-width: 180px;
@@ -279,6 +267,11 @@ p {
   color: var(--color-white);
 }
 
+.timer-dropdown .dropdown-options {
+  max-height: 250px;
+}
+
+/* ===== LAYOUT SECTIONS ===== */
 .selection-container {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -292,11 +285,7 @@ p {
   padding: var(--spacing-xl);
 }
 
-/* Settings Section Styling */
 .settings-section {
-  background-color: var(--color-accent);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -338,6 +327,7 @@ p {
   outline: none;
 }
 
+/* Hide number input spinners */
 .setting-item input[type="number"] {
   -moz-appearance: textfield;
 }
@@ -366,12 +356,7 @@ p {
   cursor: pointer;
 }
 
-/* Timer dropdown specific styling */
-.timer-dropdown .dropdown-options {
-  max-height: 250px;
-}
-
-
+/* ===== TOPICS GRID ===== */
 .topics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -391,6 +376,7 @@ p {
   background-color: var(--color-white);
   cursor: pointer;
   transition: all var(--transition);
+  border-left: 4px solid transparent;
 }
 
 .topic-checkbox {
@@ -443,8 +429,10 @@ p {
   background-color: rgba(124, 58, 237, 0.1);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-full);
+  border: none !important;
 }
 
+/* ===== CATEGORY STYLES ===== */
 .category-header {
   grid-column: 1 / -1;
   display: flex;
@@ -452,7 +440,11 @@ p {
   align-items: center;
   padding: var(--spacing-md) var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 4px solid var(--color-border);
+  background: transparent !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
 .category-title {
@@ -476,23 +468,81 @@ p {
 
 .category-progress-fill {
   height: 100%;
-  background-color: var(--color-primary);
   border-radius: var(--border-radius-full);
   transition: width var(--transition-slow);
 }
 
-.checkbox-setting {
-  flex-direction: row;
-  align-items: center;
+/* Category-specific colors */
+.category-algebra {
+  --category-color: var(--color-algebra);
+  --category-color-dark: var(--color-algebra-dark);
+  --category-color-light: var(--color-algebra-light);
 }
 
-.checkbox-setting input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary);
+.category-combinatorics {
+  --category-color: var(--color-combinatorics);
+  --category-color-dark: var(--color-combinatorics-dark);
+  --category-color-light: var(--color-combinatorics-light);
 }
 
-/* Quiz Header */
+.category-laws-of-indices {
+  --category-color: var(--color-laws-of-indices);
+  --category-color-dark: var(--color-laws-of-indices-dark);
+  --category-color-light: var(--color-laws-of-indices-light);
+}
+
+.category-number-systems {
+  --category-color: var(--color-number-systems);
+  --category-color-dark: var(--color-number-systems-dark);
+  --category-color-light: var(--color-number-systems-light);
+}
+
+.category-sequences-series {
+  --category-color: var(--color-sequences-series);
+  --category-color-dark: var(--color-sequences-series-dark);
+  --category-color-light: var(--color-sequences-series-light);
+}
+
+/* Apply category colors to headers */
+.category-header[data-category="algebra"] { border-bottom-color: var(--color-algebra); color: var(--color-algebra-dark); }
+.category-header[data-category="combinatorics"] { border-bottom-color: var(--color-combinatorics); color: var(--color-combinatorics-dark); }
+.category-header[data-category="laws-of-indices"] { border-bottom-color: var(--color-laws-of-indices); color: var(--color-laws-of-indices-dark); }
+.category-header[data-category="number-systems"] { border-bottom-color: var(--color-number-systems); color: var(--color-number-systems-dark); }
+.category-header[data-category="sequences-series"] { border-bottom-color: var(--color-sequences-series); color: var(--color-sequences-series-dark); }
+
+.category-header[data-category="algebra"] .category-progress-fill { background: var(--color-algebra); }
+.category-header[data-category="combinatorics"] .category-progress-fill { background: var(--color-combinatorics); }
+.category-header[data-category="laws-of-indices"] .category-progress-fill { background: var(--color-laws-of-indices); }
+.category-header[data-category="number-systems"] .category-progress-fill { background: var(--color-number-systems); }
+.category-header[data-category="sequences-series"] .category-progress-fill { background: var(--color-sequences-series); }
+
+/* Apply category colors to topic items */
+.topic-item[data-category="Algebra"] .topic-checkbox { border-color: var(--color-algebra); }
+.topic-item[data-category="Algebra"] .topic-checkbox.checked { background: var(--color-algebra); border-color: var(--color-algebra-dark); }
+.topic-item[data-category="Algebra"] .topic-category { background: var(--color-algebra-light) !important; color: var(--color-algebra-dark) !important; }
+.topic-item[data-category="Algebra"].selected { background: var(--color-algebra-light); }
+
+.topic-item[data-category="Combinatorics"] .topic-checkbox { border-color: var(--color-combinatorics); }
+.topic-item[data-category="Combinatorics"] .topic-checkbox.checked { background: var(--color-combinatorics); border-color: var(--color-combinatorics-dark); }
+.topic-item[data-category="Combinatorics"] .topic-category { background: var(--color-combinatorics-light) !important; color: var(--color-combinatorics-dark) !important; }
+.topic-item[data-category="Combinatorics"].selected { background: var(--color-combinatorics-light); }
+
+.topic-item[data-category="Laws of Indices"] .topic-checkbox { border-color: var(--color-laws-of-indices); }
+.topic-item[data-category="Laws of Indices"] .topic-checkbox.checked { background: var(--color-laws-of-indices); border-color: var(--color-laws-of-indices-dark); }
+.topic-item[data-category="Laws of Indices"] .topic-category { background: var(--color-laws-of-indices-light) !important; color: var(--color-laws-of-indices-dark) !important; }
+.topic-item[data-category="Laws of Indices"].selected { background: var(--color-laws-of-indices-light); }
+
+.topic-item[data-category="Number Systems"] .topic-checkbox { border-color: var(--color-number-systems); }
+.topic-item[data-category="Number Systems"] .topic-checkbox.checked { background: var(--color-number-systems); border-color: var(--color-number-systems-dark); }
+.topic-item[data-category="Number Systems"] .topic-category { background: var(--color-number-systems-light) !important; color: var(--color-number-systems-dark) !important; }
+.topic-item[data-category="Number Systems"].selected { background: var(--color-number-systems-light); }
+
+.topic-item[data-category="Sequences & Series"] .topic-checkbox { border-color: var(--color-sequences-series); }
+.topic-item[data-category="Sequences & Series"] .topic-checkbox.checked { background: var(--color-sequences-series); border-color: var(--color-sequences-series-dark); }
+.topic-item[data-category="Sequences & Series"] .topic-category { background: var(--color-sequences-series-light) !important; color: var(--color-sequences-series-dark) !important; }
+.topic-item[data-category="Sequences & Series"].selected { background: var(--color-sequences-series-light); }
+
+/* ===== QUIZ INTERFACE ===== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -532,6 +582,7 @@ p {
   border-radius: var(--border-radius-full);
   font-weight: 600;
   color: var(--color-text);
+  transition: all var(--transition);
 }
 
 .timer.time-warning {
@@ -611,6 +662,19 @@ p {
 .result-icon {
   margin-left: var(--spacing-sm);
   color: inherit;
+}
+
+/* ===== NAVIGATION ===== */
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) 0;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: var(--spacing-md);
 }
 
 /* Question Navigation Panel */
@@ -706,18 +770,7 @@ p {
   visibility: visible;
 }
 
-.navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg) 0;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
+/* ===== RESULTS & FEEDBACK ===== */
 .results-container {
   background-color: var(--color-white);
   border-radius: var(--border-radius-lg);
@@ -734,25 +787,11 @@ p {
   line-height: 1;
 }
 
-.grade-A {
-  color: var(--color-success);
-}
-
-.grade-B {
-  color: var(--color-info);
-}
-
-.grade-C {
-  color: var(--color-warning);
-}
-
-.grade-D {
-  color: #f97316;
-}
-
-.grade-F {
-  color: var(--color-danger);
-}
+.grade-A { color: var(--color-success); }
+.grade-B { color: var(--color-info); }
+.grade-C { color: var(--color-warning); }
+.grade-D { color: #f97316; }
+.grade-F { color: var(--color-danger); }
 
 .score-details {
   display: grid;
@@ -823,161 +862,7 @@ p {
   color: var(--color-success);
 }
 
-/* Footer */
-.footer {
-  background-color: var(--color-accent);
-  margin-top: auto;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-2xl) var(--spacing-lg);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-2xl);
-}
-
-.footer-section h3 {
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-}
-
-.footer-section p {
-  color: var(--color-text-light);
-  margin-bottom: var(--spacing-sm);
-}
-
-.contact-info p {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.contact-info a {
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-.contact-info a:hover {
-  text-decoration: underline;
-}
-
-.footer-bottom {
-  border-top: 1px solid var(--color-border);
-  padding: var(--spacing-lg);
-  text-align: center;
-  color: var(--color-text-light);
-  font-size: var(--font-size-sm);
-}
-
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  .print-only {
-    display: block !important;
-  }
-  
-  body {
-    background-color: white;
-    color: black;
-  }
-}
-
-.print-only {
-  display: none;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.text-success {
-  color: var(--color-success);
-}
-
-.text-danger {
-  color: var(--color-danger);
-}
-
-.text-warning {
-  color: var(--color-warning);
-}
-
-/* Loading Animation */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: var(--spacing-2xl);
-  color: var(--color-text-light);
-}
-
-.loading::after {
-  content: "";
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-top: 2px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-left: var(--spacing-md);
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Confetti Animation */
-.confetti {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1000;
-}
-
-.confetti-piece {
-  position: absolute;
-  width: 10px;
-  height: 20px;
-  background: var(--color-primary);
-  top: 0;
-  opacity: 0;
-  animation: confetti-fall 5s linear forwards;
-}
-
-@keyframes confetti-fall {
-  0% {
-    opacity: 1;
-    transform: translateY(-100px) rotate(0deg);
-  }
-  
-  100% {
-    opacity: 0;
-    transform: translateY(100vh) rotate(360deg);
-  }
-}
-
-/* Footer */
+/* ===== FOOTER ===== */
 .footer {
   background-color: var(--color-accent);
   margin-top: auto;
@@ -1044,370 +929,65 @@ p {
   background-color: var(--color-secondary);
 }
 
-@media (max-width: 768px) {
-  
-  .selection-container {
-    grid-template-columns: 1fr;
+/* ===== ANIMATIONS ===== */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-100px) rotate(0deg);
   }
-  
-  .settings-section {
-    padding: var(--spacing-lg);
-  }
-  
-  .setting-item {
-    gap: var(--spacing-xs);
-  }
-  
-  .setting-item input[type="number"],
-  .setting-item input[type="text"] {
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-  
-  .checkbox-setting {
-    gap: var(--spacing-sm);
-  }
-  
-  .container {
-    padding: var(--spacing-md);
-  }
-  
-  .topic-selection {
-    padding: var(--spacing-lg);
-  }
-  
-  .search-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-container {
-    min-width: auto;
-  }
-  
-  .selection-container {
-    gap: var(--spacing-lg);
-  }
-  
-  .topics-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .question-nav-panel {
-    width: 100%;
-    right: -100%;
-  }
-  
-  .score-details {
-    grid-template-columns: 1fr;
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: stretch;
-  }
-  
-  .student-name {
-    width: 100%;
-  }
-  
-  .topics-section,
-  .settings-section {
-    
-    padding: var(--spacing-xs);
-  }
-  
-  .topic-item {
-    width: 250px;
-  }
-  
-  .custom-dropdown {
-    min-width: 100%;
-    width: 100%;
-  }
-  
-  .dropdown-selected {
-    width: 100%;
-  }
-  
-  .dropdown-options {
-    width: 100%;
-    left: 0;
-    right: 0;
-  }
-  
-  .search-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-md);
-  }
-  
-  .sort-options {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-sm);
-  }
-  
-  .sort-options label {
-    text-align: center;
-    margin-bottom: var(--spacing-xs);
-  }
-  
-  .search-container {
-    min-width: auto;
-    width: 100%;
-  }
-  
-  body {
-    overflow-x: hidden;
-  }
-  
-  .container {
-    width: 100%;
-    max-width: 100%;
-  }
-  
-    .footer-content {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-xl) var(--spacing-md);
-  }
-  
-  .footer-section {
-    text-align: center;
-  }
-  
-  .footer-section h3 {
-    justify-content: center;
-  }
-  
-  .contact-info p {
-    justify-content: center;
-  }
-  
-  .footer-bottom {
-    padding: var(--spacing-md);
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(360deg);
   }
 }
 
-@media (max-width: 480px) {
-  .footer-content {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
-  
-  .footer-section h3 {
-    font-size: var(--font-size-base);
-  }
-  
-  .contact-info p {
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    text-align: center;
-  }
+/* Loading Animation */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-light);
 }
 
-.topic-item[data-category="Algebra"] {
-  border-left: 4px solid transparent;
+.loading::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: var(--spacing-md);
 }
 
-.topic-item[data-category="Algebra"] .topic-checkbox {
-  border-color: var(--color-algebra);
+/* Confetti Animation */
+.confetti {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
 }
 
-.topic-item[data-category="Algebra"] .topic-checkbox.checked {
-  background: var(--color-algebra);
-  border-color: var(--color-algebra-dark);
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 20px;
+  background: var(--color-primary);
+  top: 0;
+  opacity: 0;
+  animation: confetti-fall 5s linear forwards;
 }
 
-.topic-item[data-category="Algebra"] .topic-category {
-  background: var(--color-algebra-light) !important;
-  color: var(--color-algebra-dark) !important;
-  border: none !important;
-}
-
-.topic-item[data-category="Algebra"]:hover {
-  border-left-color: transparent;
-}
-
-.topic-item[data-category="Algebra"].selected {
-  border-left-color: transparent;
-  background: var(--color-algebra-light);
-}
-
-/* Combinatorics */
-.topic-item[data-category="Combinatorics"] {
-  border-left: 4px solid transparent;
-}
-
-.topic-item[data-category="Combinatorics"] .topic-checkbox {
-  border-color: var(--color-combinatorics);
-}
-
-.topic-item[data-category="Combinatorics"] .topic-checkbox.checked {
-  background: var(--color-combinatorics);
-  border-color: var(--color-combinatorics-dark);
-}
-
-.topic-item[data-category="Combinatorics"] .topic-category {
-  background: var(--color-combinatorics-light) !important;
-  color: var(--color-combinatorics-dark) !important;
-  border: none !important;
-}
-
-.topic-item[data-category="Combinatorics"]:hover {
-  border-left-color: transparent;
-}
-
-.topic-item[data-category="Combinatorics"].selected {
-  border-left-color: transparent;
-  background: var(--color-combinatorics-light);
-}
-
-/* Laws of Indices */
-.topic-item[data-category="Laws of Indices"] {
-  border-left: 4px solid transparent;
-}
-
-.topic-item[data-category="Laws of Indices"] .topic-checkbox {
-  border-color: var(--color-laws-of-indices);
-}
-
-.topic-item[data-category="Laws of Indices"] .topic-checkbox.checked {
-  background: var(--color-laws-of-indices);
-  border-color: var(--color-laws-of-indices-dark);
-}
-
-.topic-item[data-category="Laws of Indices"] .topic-category {
-  background: var(--color-laws-of-indices-light) !important;
-  color: var(--color-laws-of-indices-dark) !important;
-  border: none !important;
-}
-
-.topic-item[data-category="Laws of Indices"]:hover {
-  border-left-color: transparent;
-}
-
-.topic-item[data-category="Laws of Indices"].selected {
-  border-left-color: transparent;
-  background: var(--color-laws-of-indices-light);
-}
-
-/* Number Systems */
-.topic-item[data-category="Number Systems"] {
-  border-left: 4px solid transparent;
-}
-
-.topic-item[data-category="Number Systems"] .topic-checkbox {
-  border-color: var(--color-number-systems);
-}
-
-.topic-item[data-category="Number Systems"] .topic-checkbox.checked {
-  background: var(--color-number-systems);
-  border-color: var(--color-number-systems-dark);
-}
-
-.topic-item[data-category="Number Systems"] .topic-category {
-  background: var(--color-number-systems-light) !important;
-  color: var(--color-number-systems-dark) !important;
-  border: none !important;
-}
-
-.topic-item[data-category="Number Systems"]:hover {
-  border-left-color: transparent;
-}
-
-.topic-item[data-category="Number Systems"].selected {
-  border-left-color: transparent;
-  background: var(--color-number-systems-light);
-}
-
-/* Sequences & Series */
-.topic-item[data-category="Sequences & Series"] {
-  border-left: 4px solid transparent;
-}
-
-.topic-item[data-category="Sequences & Series"] .topic-checkbox {
-  border-color: var(--color-sequences-series);
-}
-
-.topic-item[data-category="Sequences & Series"] .topic-checkbox.checked {
-  background: var(--color-sequences-series);
-  border-color: var(--color-sequences-series-dark);
-}
-
-.topic-item[data-category="Sequences & Series"] .topic-category {
-  background: var(--color-sequences-series-light) !important;
-  color: var(--color-sequences-series-dark) !important;
-  border: none !important;
-}
-
-.topic-item[data-category="Sequences & Series"]:hover {
-  border-left-color: transparent;
-}
-
-.topic-item[data-category="Sequences & Series"].selected {
-  border-left-color: transparent;
-  background: var(--color-sequences-series-light);
-}
-
-.category-header[data-category="algebra"] {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 4px solid var(--color-algebra) !important;
-  color: var(--color-algebra-dark) !important;
-}
-
-.category-header[data-category="combinatorics"] {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 4px solid var(--color-combinatorics) !important;
-  color: var(--color-combinatorics-dark) !important;
-}
-
-.category-header[data-category="laws-of-indices"] {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 4px solid var(--color-laws-of-indices) !important;
-  color: var(--color-laws-of-indices-dark) !important;
-}
-
-.category-header[data-category="number-systems"] {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 4px solid var(--color-number-systems) !important;
-  color: var(--color-number-systems-dark) !important;
-}
-
-.category-header[data-category="sequences-series"] {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 4px solid var(--color-sequences-series) !important;
-  color: var(--color-sequences-series-dark) !important;
-}
-
-/* Progress fill colors for each category */
-.category-header[data-category="algebra"] .category-progress-fill {
-  background: var(--color-algebra);
-}
-
-.category-header[data-category="combinatorics"] .category-progress-fill {
-  background: var(--color-combinatorics);
-}
-
-.category-header[data-category="laws-of-indices"] .category-progress-fill {
-  background: var(--color-laws-of-indices);
-}
-
-.category-header[data-category="number-systems"] .category-progress-fill {
-  background: var(--color-number-systems);
-}
-
-.category-header[data-category="sequences-series"] .category-progress-fill {
-  background: var(--color-sequences-series);
-}
-
-
+/* ===== LOADING OVERLAY ===== */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1448,4 +1028,543 @@ p {
 
 .mathjax-fallback-warning i {
   margin-right: 5px;
+}
+
+/* ===== MATHJAX LOADING OVERLAY ===== */
+.mathjax-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: var(--font-family);
+  transition: all 0.3s ease-in-out;
+}
+
+.mathjax-loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px);
+}
+
+.mathjax-loading-content {
+  text-align: center;
+  max-width: 500px;
+  padding: var(--spacing-2xl);
+  background: var(--color-white);
+  border-radius: var(--border-radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--color-border);
+  animation: mathjaxSlideUp 0.5s ease-out;
+}
+
+@keyframes mathjaxSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mathjax-loading-spinner {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto var(--spacing-lg);
+  position: relative;
+}
+
+.mathjax-spinner-circle {
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--color-secondary);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 50%;
+  animation: mathjaxSpin 1.2s linear infinite;
+}
+
+.mathjax-spinner-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+@keyframes mathjaxSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mathjax-loading-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.mathjax-loading-title i {
+  color: var(--color-primary);
+}
+
+.mathjax-loading-description {
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.6;
+  font-size: var(--font-size-base);
+}
+
+.mathjax-progress-container {
+  width: 100%;
+  height: 6px;
+  background: var(--color-secondary);
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.mathjax-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: var(--border-radius-full);
+  width: 0%;
+  transition: width 0.3s ease;
+  animation: mathjaxProgressPulse 2s ease-in-out infinite;
+}
+
+@keyframes mathjaxProgressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.mathjax-fallback-option {
+  background: var(--color-accent);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+}
+
+.mathjax-fallback-option p {
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+}
+
+.mathjax-skip-button {
+  background: var(--color-white);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--border-radius-full);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-base);
+}
+
+.mathjax-skip-button:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.mathjax-skip-button:active {
+  transform: translateY(0);
+}
+
+.mathjax-loading-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+}
+
+.mathjax-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.mathjax-stat-value {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+}
+
+.mathjax-stat-label {
+  font-size: var(--font-size-xs);
+}
+
+/* MathJax Ready States */
+.mathjax-loading .question-text,
+.mathjax-loading .option,
+.mathjax-loading .topic-description {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.mathjax-ready .question-text,
+.mathjax-ready .option,
+.mathjax-ready .topic-description {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* Enhanced Fallback Warning */
+.mathjax-fallback-warning {
+  background: linear-gradient(135deg, #fff3cd, #fff8e6);
+  border: 2px solid #ffeaa7;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  color: #856404;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  animation: fallbackSlideIn 0.5s ease-out;
+}
+
+@keyframes fallbackSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.mathjax-fallback-warning i {
+  font-size: 1.5rem;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.mathjax-fallback-warning-content {
+  flex: 1;
+}
+
+.mathjax-fallback-warning h4 {
+  margin-bottom: var(--spacing-xs);
+  color: #92400e;
+  font-size: var(--font-size-base);
+}
+
+.mathjax-fallback-warning p {
+  margin-bottom: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+/* Loading States for Specific Elements */
+.topic-item.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.topic-item.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Progress Indicator for Multiple Equations */
+.mathjax-equation-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+  margin-top: var(--spacing-sm);
+}
+
+/* Responsive Design for MathJax Overlay */
+@media (max-width: 768px) {
+  .mathjax-loading-content {
+    margin: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    max-width: none;
+  }
+  
+  .mathjax-loading-title {
+    font-size: var(--font-size-lg);
+  }
+  
+  .mathjax-loading-description {
+    font-size: var(--font-size-sm);
+  }
+  
+  .mathjax-loading-stats {
+    gap: var(--spacing-lg);
+  }
+  
+  .mathjax-stat-value {
+    font-size: var(--font-size-base);
+  }
+  
+  .mathjax-skip-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .mathjax-fallback-warning {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .mathjax-loading-content {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+  
+  .mathjax-loading-spinner {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mathjax-loading-stats {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mathjax-loading-overlay {
+    background: rgba(15, 23, 42, 0.98);
+  }
+  
+  .mathjax-loading-content {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-dark);
+  }
+  
+  .mathjax-loading-title {
+    color: var(--color-text-dark);
+  }
+  
+  .mathjax-loading-description {
+    color: var(--color-text-light-dark);
+  }
+  
+  .mathjax-fallback-option {
+    background: var(--color-bg-secondary-dark);
+    border-color: var(--color-border-dark);
+  }
+  
+  .mathjax-skip-button {
+    background: var(--color-bg-dark);
+    color: var(--color-text-dark);
+    border-color: var(--color-border-dark);
+  }
+  
+  .mathjax-skip-button:hover {
+    background: var(--color-bg-secondary-dark);
+  }
+  
+  .mathjax-fallback-warning {
+    background: linear-gradient(135deg, #451a03, #5a2706);
+    border-color: #92400e;
+    color: #fbbf24;
+  }
+  
+  .mathjax-fallback-warning h4 {
+    color: #fbbf24;
+  }
+}
+
+/* Print styles - hide loading overlay */
+@media print {
+  .mathjax-loading-overlay {
+    display: none !important;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  body {
+    background-color: white;
+    color: black;
+  }
+}
+
+.print-only {
+  display: none;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-md);
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .topic-selection {
+    padding: var(--spacing-lg);
+  }
+  
+  .selection-container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .topics-section,
+  .settings-section {
+    padding: var(--spacing-xs);
+  }
+  
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+  
+  .search-container {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .sort-options {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+  
+  .sort-options label {
+    text-align: center;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .custom-dropdown {
+    min-width: 100%;
+    width: 100%;
+  }
+  
+  .dropdown-selected,
+  .dropdown-options {
+    width: 100%;
+  }
+  
+  .dropdown-options {
+    left: 0;
+    right: 0;
+  }
+  
+  .topics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .topic-item {
+    width: 250px;
+  }
+  
+  .question-nav-panel {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+  
+  .student-name {
+    width: 100%;
+  }
+  
+  .score-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  .footer-section {
+    text-align: center;
+  }
+  
+  .footer-section h3 {
+    justify-content: center;
+  }
+  
+  .contact-info p {
+    justify-content: center;
+  }
+  
+  .footer-bottom {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-content {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  
+  .footer-section h3 {
+    font-size: var(--font-size-base);
+  }
+  
+  .contact-info p {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    text-align: center;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
 }

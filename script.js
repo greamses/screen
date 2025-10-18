@@ -1192,30 +1192,97 @@ const MathJaxManager = {
     if (hasRemainingLatex) this.showFallbackWarning();
   },
   
-  createLoadingOverlay() {
-    const existingOverlay = document.querySelector('.loading-overlay');
+  // In your MathJaxManager, update the createLoadingOverlay function:
+createLoadingOverlay() {
+    const existingOverlay = document.querySelector('.mathjax-loading-overlay');
     if (existingOverlay) existingOverlay.remove();
     
     const overlay = document.createElement('div');
-    overlay.className = 'loading-overlay';
+    overlay.className = 'mathjax-loading-overlay';
     overlay.innerHTML = `
-      <div class="loading-content">
-        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
-        <h3>Loading Math Rendering</h3>
-        <p>Preparing mathematical equations and symbols...</p>
-        <div class="loading-fallback">
-          <p>Taking too long?</p>
-          <button onclick="MathJaxManager.skipMathJax()">
-            <i class="fas fa-forward"></i> Skip Math Rendering
-          </button>
-          <p>Equations will show as plain text</p>
+    <div class="mathjax-loading-content">
+      <div class="mathjax-loading-spinner">
+        <div class="mathjax-spinner-circle"></div>
+        <div class="mathjax-spinner-inner">
+          <i class="fas fa-square-root-variable"></i>
         </div>
       </div>
-    `;
+      
+      <h3 class="mathjax-loading-title">
+        Rendering Mathematical Equations
+      </h3>
+      
+      <p class="mathjax-loading-description">
+        Preparing complex mathematical notation and symbols for display. 
+        This ensures all equations render correctly.
+      </p>
+      
+      <div class="mathjax-progress-container">
+        <div class="mathjax-progress-bar" id="mathjax-progress"></div>
+      </div>
+      
+      <div class="mathjax-loading-stats">
+        <div class="mathjax-stat">
+          <span class="mathjax-stat-value" id="mathjax-equations">0</span>
+          <span class="mathjax-stat-label">Equations</span>
+        </div>
+        <div class="mathjax-stat">
+          <span class="mathjax-stat-value" id="mathjax-time">3s</span>
+          <span class="mathjax-stat-label">Estimated</span>
+        </div>
+      </div>
+      
+      <div class="mathjax-fallback-option">
+        <p>Taking longer than expected?</p>
+        <button class="mathjax-skip-button" onclick="MathJaxManager.skipMathJax()">
+          <i class="fas fa-forward"></i>
+          Skip Render
+        </button>
+        <p class="mathjax-equation-count">
+          Equations will display as plain text
+        </p>
+      </div>
+    </div>
+  `;
     
     document.body.appendChild(overlay);
+    
+    // Add progress animation
+    this.animateProgress();
+    
     overlay.autoHideTimeout = setTimeout(() => this.hideOverlay(), CONFIG.MATHJAX_TIMEOUT);
     return overlay;
+  },
+  
+  animateProgress() {
+    const progressBar = document.getElementById('mathjax-progress');
+    if (!progressBar) return;
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress > 90) progress = 90;
+      progressBar.style.width = `${progress}%`;
+    }, 500);
+    
+    // Store interval ID to clear later
+    progressBar.animationInterval = interval;
+  },
+  
+  hideOverlay() {
+    const overlay = document.querySelector('.mathjax-loading-overlay');
+    if (overlay) {
+      // Clear progress animation
+      const progressBar = document.getElementById('mathjax-progress');
+      if (progressBar?.animationInterval) {
+        clearInterval(progressBar.animationInterval);
+      }
+      
+      if (overlay.autoHideTimeout) clearTimeout(overlay.autoHideTimeout);
+      
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.remove(), 300);
+    }
   },
   
   hideOverlay() {
