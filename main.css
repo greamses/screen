@@ -542,6 +542,40 @@ p {
 .topic-item[data-category="Sequences & Series"] .topic-category { background: var(--color-sequences-series-light) !important; color: var(--color-sequences-series-dark) !important; }
 .topic-item[data-category="Sequences & Series"].selected { background: var(--color-sequences-series-light); }
 
+.category-quadratic-equations {
+  --category-color: var(--color-quadratic-equations);
+  --category-color-dark: var(--color-quadratic-equations-dark);
+  --category-color-light: var(--color-quadratic-equations-light);
+}
+
+.category-header[data-category="quadratic-equations"] {
+  border-bottom-color: var(--color-quadratic-equations);
+  color: var(--color-quadratic-equations-dark);
+}
+
+.category-header[data-category="quadratic-equations"] .category-progress-fill {
+  background: var(--color-quadratic-equations);
+}
+
+.topic-item[data-category="Quadratic Equations"] .topic-checkbox {
+  border-color: var(--color-quadratic-equations);
+}
+
+.topic-item[data-category="Quadratic Equations"] .topic-checkbox.checked {
+  background: var(--color-quadratic-equations);
+  border-color: var(--color-quadratic-equations-dark);
+}
+
+.topic-item[data-category="Quadratic Equations"] .topic-category {
+  background: var(--color-quadratic-equations-light) !important;
+  color: var(--color-quadratic-equations-dark) !important;
+}
+
+.topic-item[data-category="Quadratic Equations"].selected {
+  background: var(--color-quadratic-equations-light);
+}
+
+
 /* ===== QUIZ INTERFACE ===== */
 .header {
   display: flex;
@@ -1178,6 +1212,7 @@ p {
   align-items: center;
   gap: var(--spacing-sm);
   font-size: var(--font-size-base);
+  max-width: 150px;
 }
 
 .mathjax-skip-button:hover {

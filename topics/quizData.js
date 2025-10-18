@@ -1,5 +1,3 @@
-// Remove the duplicate declaration at the bottom and fix the structure
-
 const quizTopics = {
   // A
   'all-advanced-indices': {
@@ -35,6 +33,11 @@ const quizTopics = {
     description: 'Mixed questions on all sequence types',
     generator: (count) => generateSeriesQuestions(count, 'all')
   },
+  'all-quadratic': {
+    title: 'All Quadratic Equations',
+    description: 'Mixed questions on all quadratic equation topics',
+    generator: (count) => generateQuadraticQuestions(count, 'all')
+  },
   'arithmetic-sequences': {
     title: 'Arithmetic Sequences',
     description: 'Find terms and sums of arithmetic sequences',
@@ -64,12 +67,29 @@ const quizTopics = {
     description: 'Calculate combinations and selections',
     generator: (count) => generatePermutationCombinationQuestions(count, 'combinations')
   },
+  'completing-square': {
+    title: 'Completing the Square',
+    description: 'Solve quadratic equations by completing the square',
+    generator: (count) => generateQuadraticQuestions(count, 'completing-square')
+  },
+  
+  // D
+  'difference-squares': {
+    title: 'Difference of Squares',
+    description: 'Factor and solve using difference of squares',
+    generator: (count) => generateQuadraticQuestions(count, 'difference-squares')
+  },
   
   // F
   'factorial-sequences': {
     title: 'Factorial Sequences',
     description: 'Work with factorial expressions and patterns',
     generator: (count) => generateSeriesQuestions(count, 'factorial')
+  },
+  'factoring-quadratics': {
+    title: 'Factoring Quadratics',
+    description: 'Solve quadratic equations by factoring',
+    generator: (count) => generateQuadraticQuestions(count, 'factoring')
   },
   
   // G
@@ -129,10 +149,27 @@ const quizTopics = {
   },
   
   // P
+  'perfect-squares': {
+    title: 'Perfect Squares',
+    description: 'Factor and solve perfect square quadratics',
+    generator: (count) => generateQuadraticQuestions(count, 'perfect-squares')
+  },
   'perm-comb-word-problems': {
     title: 'Permutation & Combination Word Problems',
     description: 'Solve real-world problems using permutations and combinations',
     generator: (count) => generatePermutationCombinationQuestions(count, 'word-problems')
+  },
+  
+  // Q
+  'quadratic-formula': {
+    title: 'Quadratic Formula',
+    description: 'Solve quadratic equations using the quadratic formula',
+    generator: (count) => generateQuadraticQuestions(count, 'quadratic-formula')
+  },
+  'quadratic-word-problems': {
+    title: 'Quadratic Word Problems',
+    description: 'Solve real-world problems using quadratic equations',
+    generator: (count) => generateQuadraticQuestions(count, 'word-problems')
   },
   
   // R
@@ -195,7 +232,12 @@ const quizCategories = {
   },
   'combinatorics': {
     name: 'Combinatorics',
-    topics: ['basic-permutations', 'combinations', 'perm-comb-word-problems', 'all-permutations-combinations']
+    topics: [
+      'basic-permutations',
+      'combinations',
+      'perm-comb-word-problems',
+      'all-permutations-combinations'
+    ]
   },
   'laws-of-indices': {
     name: 'Laws of Indices',
@@ -215,11 +257,36 @@ const quizCategories = {
   },
   'number-systems': {
     name: 'Number Systems',
-    topics: ['binary-conversion', 'binary-arithmetic', 'roman-conversion', 'roman-arithmetic', 'roman-comparison', 'roman-all']
+    topics: [
+      'binary-conversion',
+      'binary-arithmetic',
+      'roman-conversion',
+      'roman-arithmetic',
+      'roman-comparison',
+      'roman-all'
+    ]
+  },
+  'quadratic-equations': {
+    name: 'Quadratic Equations',
+    topics: [
+      'factoring-quadratics',
+      'quadratic-formula',
+      'completing-square',
+      'difference-squares',
+      'perfect-squares',
+      'quadratic-word-problems',
+      'all-quadratic'
+    ]
   },
   'sequences-series': {
     name: 'Sequences & Series',
-    topics: ['arithmetic-sequences', 'geometric-sequences', 'factorial-sequences', 'special-sequences', 'all-sequences']
+    topics: [
+      'arithmetic-sequences',
+      'geometric-sequences',
+      'factorial-sequences',
+      'special-sequences',
+      'all-sequences'
+    ]
   }
 };
 
@@ -265,3 +332,13 @@ window.quizData = {
   getCategoryInfo
 };
 
+// Make sure the quadratic functions are available globally
+window.quadraticAlgebra = {
+  generateQuadraticQuestions,
+  generateFactoringQuestion,
+  generateQuadraticFormulaQuestion,
+  generateCompletingSquareQuestion,
+  generateDifferenceOfSquaresQuestion,
+  generatePerfectSquareQuestion,
+  generateWordProblemQuestion
+};

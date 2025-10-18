@@ -891,53 +891,80 @@ const QuizManager = {
   
 };
 
-// MathJax Management
+// MathJax Management - Fixed Version
 const MathJaxManager = {
   configureMathJax() {
+    // Check if MathJax is already loaded
     if (window.MathJax) {
-      window.MathJax = {
-        startup: {
-          pageReady: () => {
-            state.mathJaxReady = true;
-            if (window.onMathJaxReady) window.onMathJaxReady();
-            AppInitializer.initializeWhenReady();
-            return window.MathJax.startup.defaultPageReady();
-          }
-        },
-        tex: {
-          inlineMath: [
-            ['\\(', '\\)']
-          ],
-          displayMath: [
-            ['\\[', '\\]']
-          ],
-          processEscapes: true,
-          processEnvironments: true
-        },
-        options: {
-          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-          renderActions: { addMenu: [0, '', ''] }
-        },
-        loader: {
-          load: ['[tex]/ams'],
-          source: { '[tex]/ams': 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-ams.js' }
-        }
-      };
-    } else {
-      this.loadMathJaxDynamically();
+      console.log('MathJax already loaded, configuring...');
+      this.setupMathJaxConfig();
+      return;
     }
+    
+    // Set up configuration before loading
+    this.setupMathJaxConfig();
+    this.loadMathJaxDynamically();
+  },
+  
+  setupMathJaxConfig() {
+    window.MathJax = {
+      startup: {
+        pageReady: () => {
+          console.log('MathJax pageReady called');
+          state.mathJaxReady = true;
+          MathJaxManager.hideOverlay();
+          AppInitializer.initializeWhenReady();
+          return window.MathJax.startup.defaultPageReady();
+        }
+      },
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        renderActions: {
+          addMenu: [0, '', '']
+        }
+      },
+      loader: {
+        load: ['[tex]/ams'],
+        source: {
+          '[tex]/ams': 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-ams.js'
+        }
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
   },
   
   loadMathJaxDynamically() {
+    console.log('Loading MathJax dynamically...');
+    
+    // Remove existing MathJax script if present
+    const existingScript = document.getElementById('MathJax-script');
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
     script.id = 'MathJax-script';
     script.async = true;
     
-    script.onload = () => this.configureMathJax();
-    script.onerror = () => {
-      console.error('Failed to load MathJax dynamically');
+    script.onload = () => {
+      console.log('MathJax script loaded successfully');
+      // Configuration is already set, just wait for initialization
+    };
+    
+    script.onerror = (error) => {
+      console.error('Failed to load MathJax dynamically:', error);
       state.mathJaxReady = true;
+      state.mathJaxSkipped = true;
+      this.hideOverlay();
       AppInitializer.initializeWhenReady();
     };
     
@@ -946,7 +973,10 @@ const MathJaxManager = {
   
   waitForMathJax() {
     return new Promise((resolve) => {
-      if (window.MathJax && state.mathJaxReady) {
+      console.log('Waiting for MathJax, ready state:', state.mathJaxReady);
+      
+      if (state.mathJaxReady || state.mathJaxSkipped) {
+        console.log('MathJax already ready or skipped');
         this.hideOverlay();
         resolve();
         return;
@@ -954,28 +984,34 @@ const MathJaxManager = {
       
       this.createLoadingOverlay();
       
+      // Check if MathJax is already initialized
       if (window.MathJax?.startup?.promise) {
+        console.log('MathJax startup promise found');
         window.MathJax.startup.promise
           .then(() => {
+            console.log('MathJax startup completed');
             state.mathJaxReady = true;
             this.hideOverlay();
             resolve();
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error('MathJax startup failed:', error);
             state.mathJaxReady = true;
             this.hideOverlay();
             resolve();
           });
       } else {
+        console.log('Polling for MathJax initialization');
         this.pollForMathJax(resolve);
       }
     });
   },
   
   pollForMathJax(resolve, attempts = 0) {
-    const maxAttempts = 30;
+    const maxAttempts = 20; // Reduced from 30 to timeout faster
     
     if (window.MathJax && (window.MathJax.typesetPromise || window.MathJax.typeset)) {
+      console.log('MathJax found after', attempts, 'attempts');
       state.mathJaxReady = true;
       this.hideOverlay();
       resolve();
@@ -985,24 +1021,36 @@ const MathJaxManager = {
     if (attempts >= maxAttempts) {
       console.warn('MathJax loading timeout - proceeding without it');
       state.mathJaxReady = true;
+      state.mathJaxSkipped = true;
       this.hideOverlay();
       this.showFallbackWarning();
       resolve();
       return;
     }
     
+    console.log('MathJax poll attempt', attempts + 1);
     setTimeout(() => this.pollForMathJax(resolve, attempts + 1), 500);
   },
   
   safeRenderMathJax() {
+    console.log('Safe render MathJax called, skipped:', state.mathJaxSkipped);
+    
     if (state.mathJaxSkipped) {
+      console.log('MathJax skipped, applying fallback');
       this.applyMathFallbackToAll();
       this.hideOverlay();
       return Promise.resolve();
     }
     
+    if (!window.MathJax || !state.mathJaxReady) {
+      console.log('MathJax not available, using fallback');
+      this.applyMathFallbackToAll();
+      return Promise.resolve();
+    }
+    
     return this.renderMathJax()
       .then(() => {
+        console.log('MathJax render completed');
         this.hideOverlay();
         setTimeout(() => this.checkForRemainingLatex(), 1000);
       })
@@ -1015,7 +1063,10 @@ const MathJaxManager = {
   },
   
   renderMathJax() {
-    if (!window.MathJax || !state.mathJaxReady) return Promise.resolve();
+    if (!window.MathJax || !state.mathJaxReady) {
+      console.log('MathJax not ready for rendering');
+      return Promise.resolve();
+    }
     
     return new Promise((resolve) => {
       const renderWithRetry = (retryCount = 0) => {
@@ -1023,20 +1074,35 @@ const MathJaxManager = {
           const elements = this.getMathElements();
           
           if (elements.length === 0) {
+            console.log('No math elements found to render');
             resolve();
             return;
           }
           
+          console.log('Rendering MathJax for', elements.length, 'elements');
+          
           if (window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise(elements)
-              .then(() => resolve())
-              .catch(() => {
+              .then(() => {
+                console.log('MathJax typesetPromise completed');
+                resolve();
+              })
+              .catch((error) => {
+                console.error('MathJax typesetPromise error:', error);
                 if (retryCount < CONFIG.MAX_RETRIES) {
+                  console.log('Retrying MathJax render, attempt', retryCount + 1);
                   setTimeout(() => renderWithRetry(retryCount + 1), 500);
-                } else resolve();
+                } else {
+                  console.log('Max retries reached, giving up');
+                  resolve();
+                }
               });
+          } else if (window.MathJax.typeset) {
+            console.log('Using MathJax.typeset');
+            window.MathJax.typeset(elements);
+            resolve();
           } else {
-            if (window.MathJax.typeset) window.MathJax.typeset(elements);
+            console.log('No MathJax render method available');
             resolve();
           }
         } catch (error) {
@@ -1045,6 +1111,7 @@ const MathJaxManager = {
         }
       };
       
+      // Short delay to ensure DOM is ready
       setTimeout(() => renderWithRetry(), 100);
     });
   },
@@ -1064,19 +1131,142 @@ const MathJaxManager = {
   },
   
   skipMathJax() {
+    console.log('Skip MathJax called');
     state.mathJaxReady = true;
     state.mathJaxSkipped = true;
     this.hideOverlay();
     this.forceMathFallback();
-    AppInitializer.initializeApp();
+    
+    // Re-initialize app without MathJax
+    if (state.domContentLoaded) {
+      AppInitializer.initializeApp();
+    }
+  },
+  
+  createLoadingOverlay() {
+    const existingOverlay = document.querySelector('.mathjax-loading-overlay');
+    if (existingOverlay) {
+      console.log('Removing existing overlay');
+      existingOverlay.remove();
+    }
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'mathjax-loading-overlay';
+    overlay.innerHTML = `
+      <div class="mathjax-loading-content">
+        <div class="mathjax-loading-spinner">
+          <div class="mathjax-spinner-circle"></div>
+          <div class="mathjax-spinner-inner">
+            <i class="fas fa-square-root-variable"></i>
+          </div>
+        </div>
+        
+        <h3 class="mathjax-loading-title">
+          Rendering Mathematical Equations
+        </h3>
+        
+        <p class="mathjax-loading-description">
+          Preparing complex mathematical notation and symbols for display. 
+          This ensures all equations render correctly.
+        </p>
+        
+        <div class="mathjax-progress-container">
+          <div class="mathjax-progress-bar" id="mathjax-progress"></div>
+        </div>
+        
+        <div class="mathjax-loading-stats">
+          <div class="mathjax-stat">
+            <span class="mathjax-stat-value" id="mathjax-equations">0</span>
+            <span class="mathjax-stat-label">Equations</span>
+          </div>
+          <div class="mathjax-stat">
+            <span class="mathjax-stat-value" id="mathjax-time">10s</span>
+            <span class="mathjax-stat-label">Estimated</span>
+          </div>
+        </div>
+        
+        <div class="mathjax-fallback-option">
+          <p>Taking longer than expected?</p>
+          <button class="mathjax-skip-button" id="mathjax-skip-button">
+            <i class="fas fa-forward"></i>
+            Skip
+          </button>
+          <p class="mathjax-skip-note">
+            Equations will display as plain text
+          </p>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Add click event to skip button
+    const skipButton = document.getElementById('mathjax-skip-button');
+    if (skipButton) {
+      skipButton.onclick = () => this.skipMathJax();
+    }
+    
+    // Add progress animation
+    this.animateProgress();
+    
+    // Auto-hide timeout
+    overlay.autoHideTimeout = setTimeout(() => {
+      console.log('MathJax loading timeout reached');
+      this.skipMathJax();
+    }, CONFIG.MATHJAX_TIMEOUT);
+    
+    return overlay;
+  },
+  
+  animateProgress() {
+    const progressBar = document.getElementById('mathjax-progress');
+    if (!progressBar) return;
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 8;
+      if (progress > 85) progress = 85; // Don't reach 100% until complete
+      progressBar.style.width = `${progress}%`;
+    }, 500);
+    
+    // Store interval ID to clear later
+    progressBar.animationInterval = interval;
+  },
+  
+  hideOverlay() {
+    const overlays = document.querySelectorAll('.mathjax-loading-overlay, .loading-overlay');
+    overlays.forEach(overlay => {
+      // Clear progress animation
+      const progressBar = overlay.querySelector('#mathjax-progress');
+      if (progressBar?.animationInterval) {
+        clearInterval(progressBar.animationInterval);
+      }
+      
+      if (overlay.autoHideTimeout) {
+        clearTimeout(overlay.autoHideTimeout);
+      }
+      
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => {
+        if (overlay.parentElement) {
+          overlay.remove();
+        }
+      }, 300);
+    });
   },
   
   forceMathFallback() {
-    this.getMathElements().forEach(this.displayMathFallback);
+    this.applyMathFallbackToAll();
   },
   
   applyMathFallbackToAll() {
-    this.forceMathFallback();
+    const elements = this.getMathElements();
+    elements.forEach(element => {
+      if (element) {
+        this.displayMathFallback(element);
+      }
+    });
   },
   
   displayMathFallback(element) {
@@ -1190,109 +1380,6 @@ const MathJaxManager = {
     });
     
     if (hasRemainingLatex) this.showFallbackWarning();
-  },
-  
-  // In your MathJaxManager, update the createLoadingOverlay function:
-createLoadingOverlay() {
-    const existingOverlay = document.querySelector('.mathjax-loading-overlay');
-    if (existingOverlay) existingOverlay.remove();
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'mathjax-loading-overlay';
-    overlay.innerHTML = `
-    <div class="mathjax-loading-content">
-      <div class="mathjax-loading-spinner">
-        <div class="mathjax-spinner-circle"></div>
-        <div class="mathjax-spinner-inner">
-          <i class="fas fa-square-root-variable"></i>
-        </div>
-      </div>
-      
-      <h3 class="mathjax-loading-title">
-        Rendering Mathematical Equations
-      </h3>
-      
-      <p class="mathjax-loading-description">
-        Preparing complex mathematical notation and symbols for display. 
-        This ensures all equations render correctly.
-      </p>
-      
-      <div class="mathjax-progress-container">
-        <div class="mathjax-progress-bar" id="mathjax-progress"></div>
-      </div>
-      
-      <div class="mathjax-loading-stats">
-        <div class="mathjax-stat">
-          <span class="mathjax-stat-value" id="mathjax-equations">0</span>
-          <span class="mathjax-stat-label">Equations</span>
-        </div>
-        <div class="mathjax-stat">
-          <span class="mathjax-stat-value" id="mathjax-time">3s</span>
-          <span class="mathjax-stat-label">Estimated</span>
-        </div>
-      </div>
-      
-      <div class="mathjax-fallback-option">
-        <p>Taking longer than expected?</p>
-        <button class="mathjax-skip-button" onclick="MathJaxManager.skipMathJax()">
-          <i class="fas fa-forward"></i>
-          Skip Render
-        </button>
-        <p class="mathjax-equation-count">
-          Equations will display as plain text
-        </p>
-      </div>
-    </div>
-  `;
-    
-    document.body.appendChild(overlay);
-    
-    // Add progress animation
-    this.animateProgress();
-    
-    overlay.autoHideTimeout = setTimeout(() => this.hideOverlay(), CONFIG.MATHJAX_TIMEOUT);
-    return overlay;
-  },
-  
-  animateProgress() {
-    const progressBar = document.getElementById('mathjax-progress');
-    if (!progressBar) return;
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 10;
-      if (progress > 90) progress = 90;
-      progressBar.style.width = `${progress}%`;
-    }, 500);
-    
-    // Store interval ID to clear later
-    progressBar.animationInterval = interval;
-  },
-  
-  hideOverlay() {
-    const overlay = document.querySelector('.mathjax-loading-overlay');
-    if (overlay) {
-      // Clear progress animation
-      const progressBar = document.getElementById('mathjax-progress');
-      if (progressBar?.animationInterval) {
-        clearInterval(progressBar.animationInterval);
-      }
-      
-      if (overlay.autoHideTimeout) clearTimeout(overlay.autoHideTimeout);
-      
-      overlay.classList.add('hidden');
-      setTimeout(() => overlay.remove(), 300);
-    }
-  },
-  
-  hideOverlay() {
-    const overlay = document.querySelector('.loading-overlay');
-    if (overlay) {
-      if (overlay.autoHideTimeout) clearTimeout(overlay.autoHideTimeout);
-      overlay.style.opacity = '0';
-      overlay.style.transition = 'opacity 0.3s ease';
-      setTimeout(() => overlay.remove(), 300);
-    }
   },
   
   showFallbackWarning() {
@@ -1476,10 +1563,29 @@ const UIComponents = {
 // App Initialization
 const AppInitializer = {
   initializeWhenReady() {
-    if (state.mathJaxReady && state.domContentLoaded && !state.initializationPending) {
+    console.log('Initialize when ready called:', {
+      mathJaxReady: state.mathJaxReady,
+      domContentLoaded: state.domContentLoaded,
+      initializationPending: state.initializationPending
+    });
+    
+    if ((state.mathJaxReady || state.mathJaxSkipped) && state.domContentLoaded && !state.initializationPending) {
       state.initializationPending = true;
+      console.log('Conditions met, initializing app');
       MathJaxManager.hideOverlay();
       this.initializeApp();
+    } else {
+      console.log('Conditions not met, waiting...');
+      // If MathJax is taking too long, proceed anyway after a timeout
+      setTimeout(() => {
+        if (!state.initializationPending) {
+          console.log('Fallback initialization after timeout');
+          state.mathJaxReady = true;
+          state.initializationPending = true;
+          MathJaxManager.hideOverlay();
+          this.initializeApp();
+        }
+      }, 5000);
     }
   },
   
@@ -1503,11 +1609,9 @@ const AppInitializer = {
     this.bindEvent('start-quiz-btn', 'click', () => QuizManager.startQuiz());
     this.bindEvent('next-btn', 'click', () => QuizManager.nextQuestion());
     this.bindEvent('prev-btn', 'click', () => QuizManager.previousQuestion());
-    this.bindEvent('continue-btn', 'click', () => QuizManager.closeFeedback()); // Fixed this line
+    this.bindEvent('continue-btn', 'click', () => QuizManager.closeFeedback());
     this.bindEvent('try-again-btn', 'click', () => this.restartQuiz());
     this.bindEvent('print-btn', 'click', () => this.printResults());
-    
-    
     
     // Navigation
     this.bindEvent('nav-toggle-btn', 'click', () => UIComponents.toggleQuestionNav());
@@ -1529,8 +1633,6 @@ const AppInitializer = {
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') UIComponents.closeAllDropdowns();
     });
-    
-    
   },
   
   bindEvent(elementId, event, handler) {
@@ -1594,8 +1696,26 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM content loaded');
   state.domContentLoaded = true;
   
+  // Start MathJax configuration
   MathJaxManager.configureMathJax();
+  
+  // Also set a timeout to proceed if MathJax takes too long
+  setTimeout(() => {
+    if (!state.mathJaxReady && !state.initializationPending) {
+      console.log('DOM loaded but MathJax taking too long, proceeding without it');
+      state.mathJaxSkipped = true;
+      state.mathJaxReady = true;
+      AppInitializer.initializeWhenReady();
+    }
+  }, 10000); // 10 second timeout
+  
+  // Wait for MathJax but with better error handling
   MathJaxManager.waitForMathJax().then(() => {
+    console.log('MathJax wait completed');
+    AppInitializer.initializeWhenReady();
+  }).catch(error => {
+    console.error('Error waiting for MathJax:', error);
+    state.mathJaxReady = true;
     AppInitializer.initializeWhenReady();
   });
 });

@@ -1,10 +1,10 @@
  function generateRomanNumeralQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
-  // Filter question types based on the parameter
+
   switch (questionType) {
     case 'conversion':
-      // Only Roman to decimal and decimal to Roman questions
+
       questionTypes = Array.from({length: count}, (_, i) => Math.floor(Math.random() * 2));
       break;
     case 'arithmetic':

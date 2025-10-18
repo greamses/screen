@@ -169,7 +169,7 @@
         }
         
         @keyframes pulse {
-
+            
             0%,
             100% {
                 opacity: 1;
@@ -514,15 +514,15 @@
     <div class="safe-area-spacer"></div>
     
     
-    <script src="./binary.js"></script>
-    <script src="./roman.js"></script>
-    <script src="./sequences.js"></script>
-    <script src="./permutation.js"></script>
-    <script src="./algebra1.js"></script>
-    <script src="./algebra2.js"></script>
-    <script src="./algebra3.js"></script>
+    <script src="./topics/binary.js"></script>
+    <script src="./topics/roman.js"></script>
+    <script src="./topics/sequences.js"></script>
+    <script src="./topics/permutation.js"></script>
+    <script src="./topics/algebra1.js"></script>
+    <script src="./topics/algebra2.js"></script>
+    <script src="./topics/algebra3.js"></script>
     
-    <script src="./quizData.js"></script>
+    <script src="./topics/quizData.js"></script>
     <script src="./script.js"></script>
     
     <script>
@@ -539,7 +539,7 @@
             function showFooter() {
                 scrollingFooter.style.display = 'block';
                 
-
+                
                 if (progressBar) {
                     progressBar.style.width = '0%';
                     progressBar.style.animation = 'progress 30s linear';
@@ -559,14 +559,14 @@
             if (closeButton) {
                 closeButton.addEventListener('click', function() {
                     hideFooter();
-
+                    
                     clearTimeout(displayInterval);
                 });
             }
             
             setTimeout(showFooter, 1000);
             
-
+            
         }
         
         document.addEventListener('DOMContentLoaded', initScrollingFooter);
