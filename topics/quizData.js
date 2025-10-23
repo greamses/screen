@@ -35,6 +35,11 @@ const quizTopics = {
     description: 'Mixed questions on all quadratic factoring methods',
     generator: (count) => generateQuadraticExpressionQuestions(count, 'all')
   },
+  'all-quadratic-equations': {
+    title: 'All Quadratic Equations',
+    description: 'Mixed questions on solving quadratic equations',
+    generator: (count) => generateQuadraticEquationQuestions(count, 'all')
+  },
   'all-sequences': {
     title: 'All Sequence Types',
     description: 'Mixed questions on all sequence types',
@@ -78,6 +83,11 @@ const quizTopics = {
   },
   
   // F
+  'factorable-equations': {
+    title: 'Factorable Quadratic Equations',
+    description: 'Solve quadratic equations by factoring',
+    generator: (count) => generateQuadraticEquationQuestions(count, 'factorable')
+  },
   'factorial-sequences': {
     title: 'Factorial Sequences',
     description: 'Work with factorial expressions and patterns',
@@ -158,6 +168,11 @@ const quizTopics = {
     description: 'Factor general quadratic expressions',
     generator: (count) => generateQuadraticExpressionQuestions(count, 'factors')
   },
+  'quadratic-formula': {
+    title: 'Quadratic Formula',
+    description: 'Solve quadratic equations using the quadratic formula',
+    generator: (count) => generateQuadraticEquationQuestions(count, 'quadratic-formula')
+  },
   
   // R
   'roman-all': {
@@ -218,7 +233,10 @@ const quizCategories = {
       'perfect-squares',
       'difference-squares',
       'quadratic-factors',
-      'all-quadratics'
+      'all-quadratics',
+      'factorable-equations',
+      'quadratic-formula',
+      'all-quadratic-equations'
     ]
   },
   'combinatorics': {
