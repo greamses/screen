@@ -93,6 +93,31 @@ const quizTopics = {
     description: 'Work with factorial expressions and patterns',
     generator: (count) => generateSeriesQuestions(count, 'factorial')
   },
+  'factorization-prime-factors': {
+    title: 'Prime Factorization',
+    description: 'Express numbers as products of prime factors',
+    generator: (count) => generateFactorizationQuestions(count, 'prime-factors')
+  },
+  'factorization-square-cube-roots': {
+    title: 'Square and Cube Roots using Prime Factors',
+    description: 'Find square roots and cube roots using prime factorization',
+    generator: (count) => generateFactorizationQuestions(count, 'square-cube-roots')
+  },
+  'factorization-index-notation': {
+    title: 'Index Notation with Prime Factors',
+    description: 'Express numbers in index notation using prime factors',
+    generator: (count) => generateFactorizationQuestions(count, 'index-notation')
+  },
+  'factorization-prime-composite': {
+    title: 'Prime and Composite Numbers',
+    description: 'Identify whether numbers are prime or composite',
+    generator: (count) => generateFactorizationQuestions(count, 'prime-composite')
+  },
+  'factorization-all': {
+    title: 'All Factorization Topics',
+    description: 'Mixed questions on factorization topics',
+    generator: (count) => generateFactorizationQuestions(count, 'all')
+  },
   
   // G
   'geometric-sequences': {
@@ -242,6 +267,16 @@ const quizCategories = {
   'combinatorics': {
     name: 'Combinatorics',
     topics: ['basic-permutations', 'combinations', 'perm-comb-word-problems', 'all-permutations-combinations']
+  },
+  'factorization': {
+    name: 'Factorization',
+    topics: [
+      'factorization-prime-factors',
+      'factorization-square-cube-roots',
+      'factorization-index-notation',
+      'factorization-prime-composite',
+      'factorization-all'
+    ]
   },
   'laws-of-indices': {
     name: 'Laws of Indices',
