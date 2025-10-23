@@ -1,11 +1,11 @@
-// factorization.js
+// prime-factorization.js
 function generateFactorizationQuestions(count = 10, questionType = 'all') {
   // Validate input parameters
   if (typeof count !== 'number' || count < 1 || count > 50) {
     count = 10;
   }
   
-  const validQuestionTypes = ['prime-factors', 'square-cube-roots', 'index-notation', 'prime-composite', 'all'];
+  const validQuestionTypes = ['product-prime-factors', 'index-notation', 'identify-primes', 'all'];
   if (!validQuestionTypes.includes(questionType)) {
     questionType = 'all';
   }
@@ -13,618 +13,451 @@ function generateFactorizationQuestions(count = 10, questionType = 'all') {
   let questionTypes;
   
   switch (questionType) {
-    case 'prime-factors':
+    case 'product-prime-factors':
       questionTypes = Array.from({ length: count }, () => 0);
       break;
-    case 'square-cube-roots':
+    case 'index-notation':
       questionTypes = Array.from({ length: count }, () => 1);
       break;
-    case 'index-notation':
+    case 'identify-primes':
       questionTypes = Array.from({ length: count }, () => 2);
       break;
-    case 'prime-composite':
-      questionTypes = Array.from({ length: count }, () => 3);
-      break;
     default:
-      questionTypes = Array.from({ length: count }, () => Math.floor(Math.random() * 4));
+      questionTypes = Array.from({ length: count }, () => Math.floor(Math.random() * 3));
   }
   
   return questionTypes.map(type => {
     try {
       switch (type) {
         case 0:
-          return generatePrimeFactorsQuestion();
+          return generateProductPrimeFactorsQuestion();
         case 1:
-          return generateSquareCubeRootsQuestion();
-        case 2:
           return generateIndexNotationQuestion();
-        case 3:
-          return generatePrimeCompositeQuestion();
+        case 2:
+          return generateIdentifyPrimesQuestion();
         default:
-          return generatePrimeFactorsQuestion();
+          return generateProductPrimeFactorsQuestion();
       }
     } catch (error) {
       console.error('Error generating factorization question:', error);
       // Return a fallback question
       return {
-        question: 'Express 100 as a product of its prime factors.',
-        options: ['2 × 2 × 5 × 5', '2 × 5 × 10', '4 × 25', '2 × 50'],
+        question: 'Express 60 as a product of prime factors',
+        options: ['\\(2^2 \\times 3 \\times 5\\)', '\\(2 \\times 3^2 \\times 5\\)', '\\(2 \\times 3 \\times 10\\)', '\\(4 \\times 3 \\times 5\\)'],
         correct: 0,
-        explanation: '100 = 2 × 2 × 5 × 5 = 2² × 5²'
+        explanation: 'Prime factorization: \\(60 = 2 \\times 30 = 2 \\times 2 \\times 15 = 2 \\times 2 \\times 3 \\times 5 = 2^2 \\times 3 \\times 5\\)'
       };
     }
   });
 }
 
-function generatePrimeFactorsQuestion() {
-  const number = generateNumberInRange();
-  const primeFactors = getPrimeFactors(number);
-  const primeFactorsString = formatPrimeFactors(primeFactors);
-  
-  const correctAnswer = primeFactorsString;
-  
-  const { options, correctIndex } = generateFactorizationOptions(
-    correctAnswer,
-    number,
-    'prime-factors'
-  );
-  
-  return {
-    question: `Express ${number} as a product of its prime factors.`,
-    options,
-    correct: correctIndex,
-    explanation: `
-<div><strong>Step-by-step solution:</strong></div>
-<div>${generatePrimeFactorizationSteps(number)}</div>
-<div><strong>Prime factors:</strong> ${number} = ${primeFactorsString}</div>
-    `.trim()
-  };
-}
+// Prime numbers between 1 and 20
+const PRIMES_1_TO_20 = [2, 3, 5, 7, 11, 13, 17, 19];
+const PRIMES_1_TO_100 = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+const COMPOSITES_1_TO_100 = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 26, 27, 28, 30, 32, 33, 34, 35, 36, 38, 39, 40, 42, 44, 45, 46, 48, 49, 50, 51, 52, 54, 55, 56, 57, 58, 60, 62, 63, 64, 65, 66, 68, 69, 70, 72, 74, 75, 76, 77, 78, 80, 81, 82, 84, 85, 86, 87, 88, 90, 91, 92, 93, 94, 95, 96, 98, 99, 100];
 
-function generateSquareCubeRootsQuestion() {
-  // Generate numbers that have nice square or cube roots
-  const number = generateNumberWithNiceRoots();
-  const rootType = Math.random() > 0.5 ? 'square' : 'cube';
+function generateNumberWithPrimeFactors() {
+  // Generate a number between 20 and 200 with at least 2 prime factors from 1-20
+  let primeFactors = [];
+  let number = 1;
   
-  let question, correctAnswer;
-  const primeFactors = getPrimeFactors(number);
+  // Select 2-4 prime factors randomly
+  const numFactors = 2 + Math.floor(Math.random() * 3); // 2 to 4
   
-  if (rootType === 'square') {
-    question = `Find the square root of ${number} using prime factorization.`;
-    const sqrt = Math.sqrt(number);
-    correctAnswer = `√${number} = ${Number.isInteger(sqrt) ? sqrt : formatRootFromFactors(primeFactors, 'square')}`;
-  } else {
-    question = `Find the cube root of ${number} using prime factorization.`;
-    const cbrt = Math.cbrt(number);
-    correctAnswer = `∛${number} = ${Number.isInteger(cbrt) ? cbrt : formatRootFromFactors(primeFactors, 'cube')}`;
-  }
-  
-  const { options, correctIndex } = generateFactorizationOptions(
-    correctAnswer,
-    number,
-    'roots'
-  );
-  
-  return {
-    question,
-    options,
-    correct: correctIndex,
-    explanation: generateRootExplanation(number, rootType, primeFactors)
-  };
-}
-
-function generateIndexNotationQuestion() {
-  const number = generateNumberInRange();
-  const primeFactors = getPrimeFactors(number);
-  const indexNotation = convertToIndexNotation(primeFactors);
-  
-  const correctAnswer = indexNotation;
-  
-  const { options, correctIndex } = generateFactorizationOptions(
-    correctAnswer,
-    number,
-    'index'
-  );
-  
-  return {
-    question: `Express ${number} in index notation using prime factors.`,
-    options,
-    correct: correctIndex,
-    explanation: `
-<div><strong>Step-by-step solution:</strong></div>
-<div>${generatePrimeFactorizationSteps(number)}</div>
-<div><strong>Prime factors:</strong> ${formatPrimeFactors(primeFactors)}</div>
-<div><strong>Index notation:</strong> ${number} = ${indexNotation}</div>
-    `.trim()
-  };
-}
-
-function generatePrimeCompositeQuestion() {
-  const number = generateNumberInRange();
-  const isPrime = isPrimeNumber(number);
-  
-  const question = `Is ${number} a prime or composite number?`;
-  const correctAnswer = isPrime ? 'Prime' : 'Composite';
-  
-  const { options, correctIndex } = generatePrimeCompositeOptions(number, isPrime);
-  
-  return {
-    question,
-    options,
-    correct: correctIndex,
-    explanation: generatePrimeCompositeExplanation(number, isPrime)
-  };
-}
-
-// HELPER FUNCTIONS
-
-function generateNumberInRange() {
-  // Generate random number between 50 and 500
-  return Math.floor(Math.random() * 451) + 50;
-}
-
-function generateNumberWithNiceRoots() {
-  // Generate numbers that have integer or simplified roots
-  const perfectSquares = [64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400, 441, 484];
-  const perfectCubes = [64, 125, 216, 343];
-  const numbersWithSimpleRoots = [72, 98, 108, 128, 147, 162, 180, 200, 242, 245, 250, 270, 288, 294, 320, 338, 350, 363, 375, 384, 392, 405, 432, 441, 448, 450, 468, 480, 486, 490, 500];
-  
-  const allNumbers = [...perfectSquares, ...perfectCubes, ...numbersWithSimpleRoots];
-  return allNumbers[Math.floor(Math.random() * allNumbers.length)];
-}
-
-function getPrimeFactors(n) {
-  const factors = [];
-  let number = n;
-  
-  // Handle 2 separately
-  while (number % 2 === 0) {
-    factors.push(2);
-    number = number / 2;
-  }
-  
-  // Handle odd factors
-  for (let i = 3; i <= Math.sqrt(number); i += 2) {
-    while (number % i === 0) {
-      factors.push(i);
-      number = number / i;
+  for (let i = 0; i < numFactors; i++) {
+    const prime = PRIMES_1_TO_20[Math.floor(Math.random() * PRIMES_1_TO_20.length)];
+    const power = 1 + Math.floor(Math.random() * 3); // 1 to 3
+    
+    for (let j = 0; j < power; j++) {
+      primeFactors.push(prime);
+      number *= prime;
+      
+      // Stop if we exceed 200
+      if (number > 200) {
+        return generateNumberWithPrimeFactors(); // Retry
+      }
     }
   }
   
-  // If remaining number is prime
-  if (number > 2) {
-    factors.push(number);
+  // Ensure number is at least 20
+  if (number < 20) {
+    return generateNumberWithPrimeFactors(); // Retry
+  }
+  
+  return { number, primeFactors: primeFactors.sort((a, b) => a - b) };
+}
+
+function getPrimeFactorization(n) {
+  const factors = [];
+  let num = n;
+  
+  for (let i = 2; i <= num; i++) {
+    while (num % i === 0) {
+      factors.push(i);
+      num /= i;
+    }
   }
   
   return factors;
 }
 
-function formatPrimeFactors(factors) {
-  return factors.join(' × ');
-}
-
-function convertToIndexNotation(factors) {
-  const factorCount = {};
-  
-  factors.forEach(factor => {
-    factorCount[factor] = (factorCount[factor] || 0) + 1;
+function formatPrimeFactorization(factors, useIndex = false) {
+  // Count occurrences of each prime
+  const factorCounts = {};
+  factors.forEach(f => {
+    factorCounts[f] = (factorCounts[f] || 0) + 1;
   });
   
-  const parts = [];
-  for (const [factor, count] of Object.entries(factorCount)) {
-    if (count === 1) {
-      parts.push(factor);
-    } else {
-      parts.push(`${factor}^${count}`);
+  const sortedPrimes = Object.keys(factorCounts).map(Number).sort((a, b) => a - b);
+  
+  if (useIndex) {
+    return sortedPrimes.map(prime => {
+      const count = factorCounts[prime];
+      return count > 1 ? `${prime}^${count}` : `${prime}`;
+    }).join(' \\times ');
+  } else {
+    return factors.join(' \\times ');
+  }
+}
+
+function generateProductPrimeFactorsQuestion() {
+  const { number, primeFactors } = generateNumberWithPrimeFactors();
+  const correctFactorization = formatPrimeFactorization(primeFactors, true);
+  
+  const { options, correctIndex } = generateProductOptions(number, primeFactors);
+  
+  return {
+    question: `Express ${number} as a product of prime factors`,
+    options,
+    correct: correctIndex,
+    explanation: `
+<div><strong>Prime Factorization of ${number}</strong></div>
+<div></div>
+<div>Step-by-step factorization:</div>
+${generateFactorizationSteps(number)}
+<div></div>
+<div><strong>Answer:</strong> \\(${correctFactorization}\\)</div>
+    `.trim()
+  };
+}
+
+function generateIndexNotationQuestion() {
+  const { number, primeFactors } = generateNumberWithPrimeFactors();
+  const correctFactorization = formatPrimeFactorization(primeFactors, true);
+  
+  const { options, correctIndex } = generateIndexOptions(number, primeFactors);
+  
+  return {
+    question: `Express ${number} as a product of prime factors in index notation`,
+    options,
+    correct: correctIndex,
+    explanation: `
+<div><strong>Prime Factorization of ${number} in Index Notation</strong></div>
+<div></div>
+<div>Step-by-step factorization:</div>
+${generateFactorizationSteps(number)}
+<div></div>
+<div><strong>Answer:</strong> \\(${correctFactorization}\\)</div>
+    `.trim()
+  };
+}
+
+function generateIdentifyPrimesQuestion() {
+  // Generate 4 numbers: mix of primes and composites
+  const numbers = [];
+  const primes = [];
+  
+  // Add 2-3 primes
+  const numPrimes = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < numPrimes; i++) {
+    const prime = PRIMES_1_TO_100[Math.floor(Math.random() * PRIMES_1_TO_100.length)];
+    if (!numbers.includes(prime)) {
+      numbers.push(prime);
+      primes.push(prime);
     }
   }
   
-  return parts.join(' × ');
+  // Fill remaining with composites
+  while (numbers.length < 4) {
+    const composite = COMPOSITES_1_TO_100[Math.floor(Math.random() * COMPOSITES_1_TO_100.length)];
+    if (!numbers.includes(composite)) {
+      numbers.push(composite);
+    }
+  }
+  
+  // Shuffle numbers
+  const shuffled = shuffleArray(numbers);
+  const correctAnswer = primes.sort((a, b) => a - b).join(', ');
+  
+  const { options, correctIndex } = generatePrimeIdentificationOptions(shuffled, primes);
+  
+  return {
+    question: `Which of the following numbers are prime? ${shuffled.join(', ')}`,
+    options,
+    correct: correctIndex,
+    explanation: `
+<div><strong>Prime Numbers Identification</strong></div>
+<div></div>
+<div>A prime number has exactly two factors: 1 and itself.</div>
+<div></div>
+${shuffled.map(num => `<div>\\(${num}\\): ${isPrime(num) ? 'Prime' : `Composite (factors: ${getFactors(num).join(', ')})`}</div>`).join('')}
+<div></div>
+<div><strong>Prime numbers:</strong> ${correctAnswer}</div>
+    `.trim()
+  };
 }
 
-function isPrimeNumber(n) {
-  if (n <= 1) return false;
-  if (n <= 3) return true;
-  if (n % 2 === 0 || n % 3 === 0) return false;
+function generateFactorizationSteps(number) {
+  let steps = '';
+  let n = number;
+  let divisor = 2;
   
-  for (let i = 5; i * i <= n; i += 6) {
-    if (n % i === 0 || n % (i + 2) === 0) return false;
+  steps += `<div>\\(${number}\\)</div>`;
+  
+  while (n > 1) {
+    if (n % divisor === 0) {
+      n = n / divisor;
+      steps += `<div>\\(= ${divisor} \\times ${n}\\)</div>`;
+    } else {
+      divisor++;
+      if (divisor > n) break;
+    }
+  }
+  
+  return steps;
+}
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n === 2) return true;
+  if (n % 2 === 0) return false;
+  
+  for (let i = 3; i * i <= n; i += 2) {
+    if (n % i === 0) return false;
   }
   
   return true;
 }
 
-function formatRootFromFactors(factors, rootType) {
-  const factorCount = {};
-  
-  factors.forEach(factor => {
-    factorCount[factor] = (factorCount[factor] || 0) + 1;
-  });
-  
-  const insideRoot = [];
-  const outsideRoot = [];
-  
-  for (const [factor, count] of Object.entries(factorCount)) {
-    const rootDivisor = rootType === 'square' ? 2 : 3;
-    const quotient = Math.floor(count / rootDivisor);
-    const remainder = count % rootDivisor;
-    
-    if (quotient > 0) {
-      outsideRoot.push(quotient === 1 ? factor : `${factor}^${quotient}`);
-    }
-    
-    if (remainder > 0) {
-      insideRoot.push(remainder === 1 ? factor : `${factor}^${remainder}`);
-    }
+function getFactors(n) {
+  const factors = [];
+  for (let i = 1; i <= n; i++) {
+    if (n % i === 0) factors.push(i);
   }
-  
-  if (outsideRoot.length === 0) {
-    return `√${insideRoot.join(' × ')}`;
-  }
-  
-  const outside = outsideRoot.join(' × ');
-  if (insideRoot.length === 0) {
-    return outside;
-  }
-  
-  return `${outside}√${insideRoot.join(' × ')}`;
+  return factors;
 }
 
 // OPTIONS GENERATION
 
-function generateFactorizationOptions(correctAnswer, number, type) {
-  const wrongAnswers = new Set();
+function generateProductOptions(number, correctFactors) {
+  const correct = formatPrimeFactorization(correctFactors, true);
+  const wrongOptions = new Set();
   
-  try {
-    const primeFactors = getPrimeFactors(number);
-    
-    // Generate wrong answers based on type
-    switch (type) {
-      case 'prime-factors':
-        generatePrimeFactorsWrongAnswers(wrongAnswers, number, primeFactors);
-        break;
-      case 'roots':
-        generateRootsWrongAnswers(wrongAnswers, number, primeFactors);
-        break;
-      case 'index':
-        generateIndexWrongAnswers(wrongAnswers, number, primeFactors);
-        break;
-    }
-    
-  } catch (error) {
-    console.error('Error generating factorization options:', error);
+  // Strategy 1: Include one composite number
+  const composite1 = generateCompositeOption(correctFactors);
+  if (composite1 && composite1 !== correct) wrongOptions.add(composite1);
+  
+  // Strategy 2: Wrong exponents
+  const wrongExponent = generateWrongExponentOption(correctFactors);
+  if (wrongExponent && wrongExponent !== correct && !wrongOptions.has(wrongExponent)) {
+    wrongOptions.add(wrongExponent);
   }
   
-  // Ensure we have exactly 3 wrong options
-  while (wrongAnswers.size < 3) {
-    const fallback = generateFactorizationFallback(number, type);
-    if (fallback && fallback !== correctAnswer && !wrongAnswers.has(fallback)) {
-      wrongAnswers.add(fallback);
+  // Strategy 3: Missing or extra prime
+  const missingPrime = generateMissingPrimeOption(correctFactors);
+  if (missingPrime && missingPrime !== correct && !wrongOptions.has(missingPrime)) {
+    wrongOptions.add(missingPrime);
+  }
+  
+  // Strategy 4: Swapped exponents
+  const swappedExponent = generateSwappedExponentOption(correctFactors);
+  if (swappedExponent && swappedExponent !== correct && !wrongOptions.has(swappedExponent)) {
+    wrongOptions.add(swappedExponent);
+  }
+  
+  // Fill with fallbacks if needed
+  while (wrongOptions.size < 3) {
+    const fallback = generateFallbackOption(correctFactors, number);
+    if (fallback && fallback !== correct && !wrongOptions.has(fallback)) {
+      wrongOptions.add(fallback);
     }
   }
   
-  const wrongArray = Array.from(wrongAnswers).slice(0, 3);
-  const options = [correctAnswer, ...wrongArray];
-  const shuffledOptions = shuffleArray(options);
-  const correctIndex = shuffledOptions.indexOf(correctAnswer);
+  const allOptions = [correct, ...Array.from(wrongOptions).slice(0, 3)];
+  const shuffled = shuffleArray(allOptions);
   
   return {
-    options: shuffledOptions,
-    correctIndex: correctIndex
+    options: shuffled.map(opt => `\\(${opt}\\)`),
+    correctIndex: shuffled.indexOf(correct)
   };
 }
 
-function generatePrimeCompositeOptions(number, isPrime) {
-  const correctAnswer = isPrime ? 'Prime' : 'Composite';
-  const wrongAnswers = new Set();
+function generateIndexOptions(number, correctFactors) {
+  return generateProductOptions(number, correctFactors);
+}
+
+function generatePrimeIdentificationOptions(numbers, correctPrimes) {
+  const correct = correctPrimes.sort((a, b) => a - b).join(', ');
+  const wrongOptions = new Set();
   
-  // Always include the opposite answer
-  wrongAnswers.add(isPrime ? 'Composite' : 'Prime');
+  // Strategy 1: Include one composite as prime
+  const composites = numbers.filter(n => !correctPrimes.includes(n));
+  if (composites.length > 0) {
+    const extra = [...correctPrimes, composites[0]].sort((a, b) => a - b).join(', ');
+    wrongOptions.add(extra);
+  }
   
-  // Add other plausible wrong answers
-  const additionalWrong = ['Neither', 'Both', 'Undefined'];
-  additionalWrong.forEach(answer => {
-    if (wrongAnswers.size < 3) {
-      wrongAnswers.add(answer);
+  // Strategy 2: Missing one prime
+  if (correctPrimes.length > 1) {
+    const missing = correctPrimes.slice(1).join(', ');
+    if (missing !== correct) wrongOptions.add(missing);
+  }
+  
+  // Strategy 3: Wrong combination
+  const shuffledNumbers = shuffleArray([...numbers]);
+  const wrongCombo = shuffledNumbers.slice(0, correctPrimes.length).sort((a, b) => a - b).join(', ');
+  if (wrongCombo !== correct) wrongOptions.add(wrongCombo);
+  
+  // Strategy 4: All numbers
+  if (numbers.length > correctPrimes.length) {
+    const allNums = numbers.sort((a, b) => a - b).join(', ');
+    if (allNums !== correct) wrongOptions.add(allNums);
+  }
+  
+  // Fill with fallbacks
+  while (wrongOptions.size < 3) {
+    const randomSelection = shuffleArray([...numbers]).slice(0, 1 + Math.floor(Math.random() * 3));
+    const fallback = randomSelection.sort((a, b) => a - b).join(', ');
+    if (fallback !== correct && !wrongOptions.has(fallback)) {
+      wrongOptions.add(fallback);
     }
-  });
+  }
   
-  const wrongArray = Array.from(wrongAnswers).slice(0, 3);
-  const options = [correctAnswer, ...wrongArray];
-  const shuffledOptions = shuffleArray(options);
-  const correctIndex = shuffledOptions.indexOf(correctAnswer);
+  const allOptions = [correct, ...Array.from(wrongOptions).slice(0, 3)];
+  const shuffled = shuffleArray(allOptions);
   
   return {
-    options: shuffledOptions,
-    correctIndex: correctIndex
+    options: shuffled,
+    correctIndex: shuffled.indexOf(correct)
   };
 }
 
-function generatePrimeFactorsWrongAnswers(wrongAnswers, number, primeFactors) {
-  const strategies = [
-    // Include composite factors
-    () => {
-      const composites = getCompositeFactors(number);
-      if (composites.length > 0) {
-        const randomComposite = composites[Math.floor(Math.random() * composites.length)];
-        const remaining = number / randomComposite;
-        return `${randomComposite} × ${remaining}`;
-      }
-      return null;
-    },
-    // Wrong prime factors
-    () => {
-      const wrongPrimes = [...primeFactors];
-      // Replace one prime with another small prime
-      const index = Math.floor(Math.random() * wrongPrimes.length);
-      const replacementPrimes = [2, 3, 5, 7, 11].filter(p => p !== wrongPrimes[index]);
-      if (replacementPrimes.length > 0) {
-        wrongPrimes[index] = replacementPrimes[Math.floor(Math.random() * replacementPrimes.length)];
-        return wrongPrimes.join(' × ');
-      }
-      return null;
-    },
-    // Missing a factor
-    () => {
-      if (primeFactors.length > 2) {
-        return primeFactors.slice(0, -1).join(' × ');
-      }
-      return null;
-    },
-    // Extra factor
-    () => {
-      const extraFactors = [2, 3, 5, 7];
-      const extraFactor = extraFactors[Math.floor(Math.random() * extraFactors.length)];
-      return [...primeFactors, extraFactor].join(' × ');
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    if (wrongAnswers.size >= 3) break;
-    try {
-      const wrongAnswer = strategy();
-      if (wrongAnswer && !wrongAnswers.has(wrongAnswer)) {
-        wrongAnswers.add(wrongAnswer);
-      }
-    } catch (error) {
-      continue;
-    }
-  }
-}
-
-function generateRootsWrongAnswers(wrongAnswers, number, primeFactors) {
-  const sqrt = Math.sqrt(number);
-  const cbrt = Math.cbrt(number);
-  
-  const strategies = [
-    // Simple miscalculation
-    () => `√${number} = ${Math.floor(sqrt) + 1}`,
-    () => `√${number} = ${Math.floor(sqrt) - 1}`,
-    () => `∛${number} = ${Math.floor(cbrt) + 1}`,
-    () => `∛${number} = ${Math.floor(cbrt) - 1}`,
-    // Wrong simplification
-    () => {
-      const wrongFactors = [...primeFactors];
-      if (wrongFactors.length > 1) {
-        wrongFactors[0] = wrongFactors[0] + 1;
-        return formatRootFromFactors(wrongFactors, 'square');
-      }
-      return null;
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    if (wrongAnswers.size >= 3) break;
-    try {
-      const wrongAnswer = strategy();
-      if (wrongAnswer && !wrongAnswers.has(wrongAnswer)) {
-        wrongAnswers.add(wrongAnswer);
-      }
-    } catch (error) {
-      continue;
-    }
-  }
-}
-
-function generateIndexWrongAnswers(wrongAnswers, number, primeFactors) {
-  const strategies = [
-    // Wrong exponents
-    () => {
-      const factorCount = {};
-      primeFactors.forEach(factor => {
-        factorCount[factor] = (factorCount[factor] || 0) + 1;
-      });
-      
-      const parts = [];
-      for (const [factor, count] of Object.entries(factorCount)) {
-        parts.push(`${factor}^${count + 1}`);
-      }
-      return parts.join(' × ');
-    },
-    // Mixed notation
-    () => {
-      const factorCount = {};
-      primeFactors.forEach(factor => {
-        factorCount[factor] = (factorCount[factor] || 0) + 1;
-      });
-      
-      const factors = Object.entries(factorCount);
-      if (factors.length > 1) {
-        const parts = [];
-        // Use index notation for first, expanded for others
-        parts.push(`${factors[0][0]}^${factors[0][1]}`);
-        for (let i = 1; i < factors.length; i++) {
-          parts.push(Array(factors[i][1]).fill(factors[i][0]).join(' × '));
-        }
-        return parts.join(' × ');
-      }
-      return null;
-    },
-    // Include composite numbers
-    () => {
-      const composites = getCompositeFactors(number);
-      if (composites.length > 0) {
-        const composite = composites[Math.floor(Math.random() * composites.length)];
-        const remaining = number / composite;
-        return `${composite} × ${convertToIndexNotation(getPrimeFactors(remaining))}`;
-      }
-      return null;
-    }
-  ];
-  
-  for (const strategy of strategies) {
-    if (wrongAnswers.size >= 3) break;
-    try {
-      const wrongAnswer = strategy();
-      if (wrongAnswer && !wrongAnswers.has(wrongAnswer)) {
-        wrongAnswers.add(wrongAnswer);
-      }
-    } catch (error) {
-      continue;
-    }
-  }
-}
-
-function generateFactorizationFallback(number, type) {
-  const fallbacks = {
-    'prime-factors': [
-      `${number} = 1 × ${number}`,
-      `${number} = 2 × ${number / 2}`,
-      `${number} = ${Math.floor(number/2)} × 2`
-    ],
-    'roots': [
-      `√${number} = ${Math.floor(Math.sqrt(number))}`,
-      `√${number} = ${Math.ceil(Math.sqrt(number))}`,
-      `∛${number} = ${Math.floor(Math.cbrt(number))}`
-    ],
-    'index': [
-      `${number} = ${number}`,
-      `${number} = 2^${Math.log2(number).toFixed(1)}`,
-      `${number} = 10^${Math.log10(number).toFixed(1)}`
-    ]
-  };
-  
-  const typeFallbacks = fallbacks[type] || fallbacks['prime-factors'];
-  return typeFallbacks[Math.floor(Math.random() * typeFallbacks.length)];
-}
-
-// EXPLANATION GENERATORS
-
-function generatePrimeFactorizationSteps(number) {
-  const steps = [];
-  let current = number;
-  let divisor = 2;
-  
-  steps.push(`Start with ${number}`);
-  
-  while (current > 1) {
-    if (current % divisor === 0) {
-      steps.push(`${current} ÷ ${divisor} = ${current / divisor}`);
-      current = current / divisor;
-    } else {
-      divisor++;
-    }
-  }
-  
-  return steps.join('<br>');
-}
-
-function generateRootExplanation(number, rootType, primeFactors) {
-  const factorCount = {};
-  primeFactors.forEach(factor => {
-    factorCount[factor] = (factorCount[factor] || 0) + 1;
+function generateCompositeOption(factors) {
+  // Replace one prime pair with their product (composite)
+  const factorCounts = {};
+  factors.forEach(f => {
+    factorCounts[f] = (factorCounts[f] || 0) + 1;
   });
   
-  let explanation = `<div><strong>Step-by-step solution:</strong></div>`;
-  explanation += `<div>Prime factors of ${number}: ${formatPrimeFactors(primeFactors)}</div>`;
-  explanation += `<div>Index notation: ${convertToIndexNotation(primeFactors)}</div>`;
+  const primes = Object.keys(factorCounts).map(Number).sort((a, b) => a - b);
   
-  if (rootType === 'square') {
-    explanation += `<div>For square root, group factors in pairs:</div>`;
-    const pairs = [];
-    const remaining = [];
+  if (primes.length >= 2) {
+    const idx1 = Math.floor(Math.random() * primes.length);
+    const idx2 = (idx1 + 1) % primes.length;
+    const p1 = primes[idx1];
+    const p2 = primes[idx2];
+    const composite = p1 * p2;
     
-    for (const [factor, count] of Object.entries(factorCount)) {
-      const pairsCount = Math.floor(count / 2);
-      const rem = count % 2;
-      
-      if (pairsCount > 0) {
-        pairs.push(`${factor}^${pairsCount * 2}`);
-      }
-      if (rem > 0) {
-        remaining.push(`${factor}^${rem}`);
-      }
-    }
+    // Create new factorization with composite
+    const newFactors = {...factorCounts};
+    newFactors[p1] = Math.max(0, (newFactors[p1] || 0) - 1);
+    newFactors[p2] = Math.max(0, (newFactors[p2] || 0) - 1);
+    newFactors[composite] = 1;
     
-    if (pairs.length > 0) {
-      explanation += `<div>Perfect squares: ${pairs.join(' × ')}</div>`;
-    }
-    if (remaining.length > 0) {
-      explanation += `<div>Remaining inside root: ${remaining.join(' × ')}</div>`;
-    }
-  } else {
-    explanation += `<div>For cube root, group factors in triples:</div>`;
-    const triples = [];
-    const remaining = [];
+    // Clean up zeros
+    Object.keys(newFactors).forEach(key => {
+      if (newFactors[key] === 0) delete newFactors[key];
+    });
     
-    for (const [factor, count] of Object.entries(factorCount)) {
-      const triplesCount = Math.floor(count / 3);
-      const rem = count % 3;
-      
-      if (triplesCount > 0) {
-        triples.push(`${factor}^${triplesCount * 3}`);
-      }
-      if (rem > 0) {
-        remaining.push(`${factor}^${rem}`);
-      }
-    }
-    
-    if (triples.length > 0) {
-      explanation += `<div>Perfect cubes: ${triples.join(' × ')}</div>`;
-    }
-    if (remaining.length > 0) {
-      explanation += `<div>Remaining inside root: ${remaining.join(' × ')}</div>`;
-    }
+    return Object.keys(newFactors).map(Number).sort((a, b) => a - b).map(prime => {
+      const count = newFactors[prime];
+      return count > 1 ? `${prime}^${count}` : `${prime}`;
+    }).join(' \\times ');
   }
   
-  return explanation;
+  return null;
 }
 
-function generatePrimeCompositeExplanation(number, isPrime) {
-  if (isPrime) {
-    return `
-<div><strong>Explanation:</strong></div>
-<div>${number} is a prime number because:</div>
-<div>• It has exactly two distinct positive divisors: 1 and ${number}</div>
-<div>• It cannot be formed by multiplying two smaller natural numbers</div>
-<div>• When testing divisibility by primes less than √${number} ≈ ${Math.sqrt(number).toFixed(1)}, no divisors are found</div>
-    `.trim();
-  } else {
-    const factors = getPrimeFactors(number);
-    return `
-<div><strong>Explanation:</strong></div>
-<div>${number} is a composite number because:</div>
-<div>• It has more than two positive divisors</div>
-<div>• It can be expressed as a product of smaller numbers: ${formatPrimeFactors(factors)}</div>
-<div>• Some divisors of ${number} include: 1, ${factors[0]}, ..., ${number}</div>
-    `.trim();
+function generateWrongExponentOption(factors) {
+  const factorCounts = {};
+  factors.forEach(f => {
+    factorCounts[f] = (factorCounts[f] || 0) + 1;
+  });
+  
+  const primes = Object.keys(factorCounts).map(Number);
+  if (primes.length === 0) return null;
+  
+  const prime = primes[Math.floor(Math.random() * primes.length)];
+  const wrongCounts = {...factorCounts};
+  
+  // Increase or decrease exponent by 1
+  wrongCounts[prime] += Math.random() < 0.5 ? 1 : -1;
+  if (wrongCounts[prime] <= 0) wrongCounts[prime] = 1;
+  
+  return Object.keys(wrongCounts).map(Number).sort((a, b) => a - b).map(p => {
+    const count = wrongCounts[p];
+    return count > 1 ? `${p}^${count}` : `${p}`;
+  }).join(' \\times ');
+}
+
+function generateMissingPrimeOption(factors) {
+  const factorCounts = {};
+  factors.forEach(f => {
+    factorCounts[f] = (factorCounts[f] || 0) + 1;
+  });
+  
+  const primes = Object.keys(factorCounts).map(Number);
+  if (primes.length <= 1) return null;
+  
+  // Remove one prime
+  const removeIdx = Math.floor(Math.random() * primes.length);
+  const newCounts = {...factorCounts};
+  delete newCounts[primes[removeIdx]];
+  
+  return Object.keys(newCounts).map(Number).sort((a, b) => a - b).map(p => {
+    const count = newCounts[p];
+    return count > 1 ? `${p}^${count}` : `${p}`;
+  }).join(' \\times ');
+}
+
+function generateSwappedExponentOption(factors) {
+  const factorCounts = {};
+  factors.forEach(f => {
+    factorCounts[f] = (factorCounts[f] || 0) + 1;
+  });
+  
+  const primes = Object.keys(factorCounts).map(Number);
+  if (primes.length < 2) return null;
+  
+  const idx1 = Math.floor(Math.random() * primes.length);
+  const idx2 = (idx1 + 1) % primes.length;
+  
+  const newCounts = {...factorCounts};
+  const temp = newCounts[primes[idx1]];
+  newCounts[primes[idx1]] = newCounts[primes[idx2]];
+  newCounts[primes[idx2]] = temp;
+  
+  return Object.keys(newCounts).map(Number).sort((a, b) => a - b).map(p => {
+    const count = newCounts[p];
+    return count > 1 ? `${p}^${count}` : `${p}`;
+  }).join(' \\times ');
+}
+
+function generateFallbackOption(factors, number) {
+  // Generate random but plausible factorization
+  const randomPrimes = [];
+  let product = 1;
+  
+  for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+    const prime = PRIMES_1_TO_20[Math.floor(Math.random() * PRIMES_1_TO_20.length)];
+    randomPrimes.push(prime);
+    product *= prime;
   }
+  
+  if (product === number) return null;
+  
+  return formatPrimeFactorization(randomPrimes, true);
 }
-
-function getCompositeFactors(n) {
-  const composites = [];
-  for (let i = 2; i <= Math.sqrt(n); i++) {
-    if (n % i === 0) {
-      composites.push(i);
-      if (i !== n / i) {
-        composites.push(n / i);
-      }
-    }
-  }
-  return composites.filter(f => !isPrimeNumber(f));
-}
-
-// UTILITY FUNCTIONS
 
 function shuffleArray(array) {
   const shuffled = [...array];
@@ -637,58 +470,32 @@ function shuffleArray(array) {
 
 // Update quiz configuration
 const factorizationTopics = {
-  'prime-factors': {
-    title: 'Prime Factorization',
+  'product-prime-factors': {
+    title: 'Product of Prime Factors',
     description: 'Express numbers as products of prime factors',
-    generator: (count) => generateFactorizationQuestions(count, 'prime-factors')
-  },
-  'square-cube-roots': {
-    title: 'Square and Cube Roots using Prime Factors',
-    description: 'Find square roots and cube roots using prime factorization',
-    generator: (count) => generateFactorizationQuestions(count, 'square-cube-roots')
+    generator: (count) => generateFactorizationQuestions(count, 'product-prime-factors')
   },
   'index-notation': {
-    title: 'Index Notation with Prime Factors',
-    description: 'Express numbers in index notation using prime factors',
+    title: 'Index Notation of Prime Factors',
+    description: 'Express prime factorization in index/exponential form',
     generator: (count) => generateFactorizationQuestions(count, 'index-notation')
   },
-  'prime-composite': {
-    title: 'Prime and Composite Numbers',
-    description: 'Identify whether numbers are prime or composite',
-    generator: (count) => generateFactorizationQuestions(count, 'prime-composite')
+  'identify-primes': {
+    title: 'Identifying Prime Numbers',
+    description: 'Identify prime numbers between 1 and 100',
+    generator: (count) => generateFactorizationQuestions(count, 'identify-primes')
   },
   'all-factorization': {
-    title: 'All Factorization Topics',
-    description: 'Mixed questions on factorization topics',
+    title: 'All Prime Factorization',
+    description: 'Mixed questions on prime factorization',
     generator: (count) => generateFactorizationQuestions(count, 'all')
   }
 };
 
-// Add to existing quiz configuration
-Object.assign(quizTopics, factorizationTopics);
-
-// Add factorization to number theory or create new category
-if (!quizCategories['number-theory']) {
-  quizCategories['number-theory'] = {
-    title: 'Number Theory',
-    description: 'Questions about numbers and their properties',
-    topics: []
-  };
-}
-
-quizCategories['number-theory'].topics.push(
-  'prime-factors',
-  'square-cube-roots',
-  'index-notation',
-  'prime-composite',
-  'all-factorization'
-);
-
 // Export factorization functions
 window.factorizationFunctions = {
   generateFactorizationQuestions,
-  generatePrimeFactorsQuestion,
-  generateSquareCubeRootsQuestion,
+  generateProductPrimeFactorsQuestion,
   generateIndexNotationQuestion,
-  generatePrimeCompositeQuestion
+  generateIdentifyPrimesQuestion
 };

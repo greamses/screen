@@ -1,4 +1,4 @@
-// Remove the duplicate declaration at the bottom and fix the structure
+// quiz-config.js - Centralized quiz topic configuration
 
 const quizTopics = {
   // A
@@ -11,6 +11,11 @@ const quizTopics = {
     title: 'All Algebraic Expressions',
     description: 'Mixed questions on all algebraic expression topics',
     generator: (count) => generateAlgebraicExpressionQuestions(count, 'all')
+  },
+  'all-factorization': {
+    title: 'All Prime Factorization',
+    description: 'Mixed questions on prime factorization',
+    generator: (count) => generateFactorizationQuestions(count, 'all')
   },
   'all-indices': {
     title: 'All Basic Laws of Indices',
@@ -93,31 +98,6 @@ const quizTopics = {
     description: 'Work with factorial expressions and patterns',
     generator: (count) => generateSeriesQuestions(count, 'factorial')
   },
-  'factorization-prime-factors': {
-    title: 'Prime Factorization',
-    description: 'Express numbers as products of prime factors',
-    generator: (count) => generateFactorizationQuestions(count, 'prime-factors')
-  },
-  'factorization-square-cube-roots': {
-    title: 'Square and Cube Roots using Prime Factors',
-    description: 'Find square roots and cube roots using prime factorization',
-    generator: (count) => generateFactorizationQuestions(count, 'square-cube-roots')
-  },
-  'factorization-index-notation': {
-    title: 'Index Notation with Prime Factors',
-    description: 'Express numbers in index notation using prime factors',
-    generator: (count) => generateFactorizationQuestions(count, 'index-notation')
-  },
-  'factorization-prime-composite': {
-    title: 'Prime and Composite Numbers',
-    description: 'Identify whether numbers are prime or composite',
-    generator: (count) => generateFactorizationQuestions(count, 'prime-composite')
-  },
-  'factorization-all': {
-    title: 'All Factorization Topics',
-    description: 'Mixed questions on factorization topics',
-    generator: (count) => generateFactorizationQuestions(count, 'all')
-  },
   
   // G
   'geometric-sequences': {
@@ -127,6 +107,16 @@ const quizTopics = {
   },
   
   // I
+  'identify-primes': {
+    title: 'Identifying Prime Numbers',
+    description: 'Identify prime numbers between 1 and 100',
+    generator: (count) => generateFactorizationQuestions(count, 'identify-primes')
+  },
+  'index-notation': {
+    title: 'Index Notation of Prime Factors',
+    description: 'Express prime factorization in index/exponential form',
+    generator: (count) => generateFactorizationQuestions(count, 'index-notation')
+  },
   'indices-combined-laws': {
     title: 'Combined Laws',
     description: 'Apply multiple laws of indices in complex expressions',
@@ -185,6 +175,11 @@ const quizTopics = {
     title: 'Permutation & Combination Word Problems',
     description: 'Solve real-world problems using permutations and combinations',
     generator: (count) => generatePermutationCombinationQuestions(count, 'word-problems')
+  },
+  'product-prime-factors': {
+    title: 'Product of Prime Factors',
+    description: 'Express numbers as products of prime factors',
+    generator: (count) => generateFactorizationQuestions(count, 'product-prime-factors')
   },
   
   // Q
@@ -266,16 +261,11 @@ const quizCategories = {
   },
   'combinatorics': {
     name: 'Combinatorics',
-    topics: ['basic-permutations', 'combinations', 'perm-comb-word-problems', 'all-permutations-combinations']
-  },
-  'factorization': {
-    name: 'Factorization',
     topics: [
-      'factorization-prime-factors',
-      'factorization-square-cube-roots',
-      'factorization-index-notation',
-      'factorization-prime-composite',
-      'factorization-all'
+      'basic-permutations',
+      'combinations',
+      'perm-comb-word-problems',
+      'all-permutations-combinations'
     ]
   },
   'laws-of-indices': {
@@ -296,11 +286,33 @@ const quizCategories = {
   },
   'number-systems': {
     name: 'Number Systems',
-    topics: ['binary-conversion', 'binary-arithmetic', 'roman-conversion', 'roman-arithmetic', 'roman-comparison', 'roman-all']
+    topics: [
+      'binary-conversion',
+      'binary-arithmetic',
+      'roman-conversion',
+      'roman-arithmetic',
+      'roman-comparison',
+      'roman-all'
+    ]
+  },
+  'number-theory': {
+    name: 'Number Theory',
+    topics: [
+      'product-prime-factors',
+      'index-notation',
+      'identify-primes',
+      'all-factorization'
+    ]
   },
   'sequences-series': {
     name: 'Sequences & Series',
-    topics: ['arithmetic-sequences', 'geometric-sequences', 'factorial-sequences', 'special-sequences', 'all-sequences']
+    topics: [
+      'arithmetic-sequences',
+      'geometric-sequences',
+      'factorial-sequences',
+      'special-sequences',
+      'all-sequences'
+    ]
   }
 };
 
